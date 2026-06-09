@@ -1,7 +1,7 @@
 package events
 
 import (
-	o "main/internal/domain/orders"
+	o "main/internal/domain/models/orders"
 	t "time"
 
 	"github.com/google/uuid"

@@ -16,25 +16,31 @@ var (
 	ErrInvalidStatus            = errors.New("invalid status: cannot be empty")
 )
 
+type OrderItem struct {
+	Product  Product `json:"product"`
+	Quantity int32   `json:"quantity"`
+}
+
 type Order struct {
-	EventId     uuid.UUID         `json:"event_id"`
-	Id          uuid.UUID         `json:"id"`
-	Products    map[Product]int32 `json:"products"`
-	Client      Client            `json:"client"`
-	Destination Location          `json:"destination"`
-	Status      string            `json:"status"`
-	CreatedAt   t.Time            `json:"timestamp"`
-	IsCancelled bool              `json:"is_cancelled"`
-	CancelledAt *t.Time           `json:"cancelled_at,omitempty"`
-	DeliveryAt  *t.Time           `json:"delivery_at,omitempty"`
+	EventId     uuid.UUID   `json:"event_id"`
+	Id          uuid.UUID   `json:"id"`
+	Products    []OrderItem `json:"products"`
+	Client      Client      `json:"client"`
+	Destination Location    `json:"destination"`
+	DeliveryId  *uuid.UUID  `json:"delivery_id,omitempty"`
+	Status      string      `json:"status"`
+	CreatedAt   t.Time      `json:"timestamp"`
+	IsCancelled bool        `json:"is_cancelled"`
+	CancelledAt *t.Time     `json:"cancelled_at,omitempty"`
+	DeliveredAt *t.Time     `json:"delivered_at,omitempty"`
 }
 
 func (o *Order) CalculateTimeToDelivery() (t.Duration, error) {
-	if o.DeliveryAt == nil {
+	if o.DeliveredAt == nil {
 		return 0, fmt.Errorf("%w: order %s", ErrOrderNotDelivered, o.Id)
 	}
 
-	return o.DeliveryAt.Sub(o.CreatedAt), nil
+	return o.DeliveredAt.Sub(o.CreatedAt), nil
 }
 
 func (o *Order) CalculateTimeToCancel() (t.Duration, error) {
@@ -72,6 +78,6 @@ func (o *Order) Deliver(eventId uuid.UUID, actualLocation Location) error {
 	}
 
 	now := t.Now()
-	o.DeliveryAt = &now
+	o.DeliveredAt = &now
 	return nil
 }
