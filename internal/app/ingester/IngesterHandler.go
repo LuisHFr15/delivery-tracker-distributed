@@ -24,6 +24,11 @@ func NewIngesterHandler(publisher EventPublisher) *IngesterHandler {
 	}
 }
 
+func (h *IngesterHandler) RegisterRoutes(router *gin.RouterGroup) {
+	router.POST("/order", h.CreateOrder)
+	router.POST("/order/:id/location", h.UpdateLocation)
+}
+
 func (h *IngesterHandler) CreateOrder(c *gin.Context) {
 	var event events.OrderEvent
 
@@ -37,7 +42,7 @@ func (h *IngesterHandler) CreateOrder(c *gin.Context) {
 	}
 
 	if err := h.publisher.PublishOrderEvent(event); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue event"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue event", "details": err.Error()})
 		return
 	}
 
@@ -46,7 +51,7 @@ func (h *IngesterHandler) CreateOrder(c *gin.Context) {
 
 func (h *IngesterHandler) UpdateLocation(c *gin.Context) {
 	orderIdStr := c.Param("id")
-	_, err := uuid.Parse(orderIdStr)
+	orderId, err := uuid.Parse(orderIdStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order id format"})
 		return
@@ -58,18 +63,20 @@ func (h *IngesterHandler) UpdateLocation(c *gin.Context) {
 		return
 	}
 
+	event.OrderId = orderId
+
 	if err := h.publisher.PublishLocationEvent(event); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue location event"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue location event", "details": err.Error()})
 		return
 	}
 
 	c.Status(http.StatusAccepted)
 }
 
+// TODO: define the POST method to the cloudfare tunnel /metrics endpoint with the desired metrics
 func MetricsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-
 		c.Next()
 
 		latency := time.Since(start)
