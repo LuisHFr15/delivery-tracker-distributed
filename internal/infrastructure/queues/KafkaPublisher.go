@@ -35,27 +35,26 @@ func NewKafkaPublisher() *KafkaPublisher {
 	}
 }
 
-func (p *KafkaPublisher) PublishOrderEvent(event events.OrderEvent) error {
+func (p *KafkaPublisher) PublishOrderEvent(ctx context.Context, event events.OrderEvent) error {
 	value, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal order event: %w", err)
 	}
 
-	return p.orderWriter.WriteMessages(context.Background(), kafka.Message{
+	return p.orderWriter.WriteMessages(ctx, kafka.Message{
 		Key:   []byte(event.Id.String()),
 		Value: value,
 	})
 }
 
-func (p *KafkaPublisher) PublishLocationEvent(event events.LocationEvent) error {
+func (p *KafkaPublisher) PublishLocationEvent(ctx context.Context, event events.LocationEvent) error {
 	value, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal location event: %w", err)
 	}
 
 	// context lib -> propagate cancellation signals, signal lifecycles
-	// TODO: study go contexts and routines to know when use it properly
-	return p.locationWriter.WriteMessages(context.Background(), kafka.Message{
+	return p.locationWriter.WriteMessages(ctx, kafka.Message{
 		Key:   []byte(event.OrderId.String()),
 		Value: value,
 	})
