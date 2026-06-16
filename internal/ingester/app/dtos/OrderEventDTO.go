@@ -1,8 +1,9 @@
 package dtos
 
 import (
-	m "main/internal/ingester/domain/models"
-	t "time"
+	"time"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/domain/models"
 
 	"github.com/google/uuid"
 )
@@ -11,10 +12,10 @@ type OrderEventDTO struct {
 	EventID         uuid.UUID `json:"event_id,omitempty"`
 	Order           OrderDTO  `json:"order"`
 	TransactionType string    `json:"transaction_type"` // CREATE, CANCEL, UPDATE
-	Timestamp       t.Time    `json:"timestamp,omitempty"`
+	Timestamp       time.Time `json:"timestamp,omitempty"`
 }
 
-func (d *OrderEventDTO) ToDomain() m.Order {
+func (d *OrderEventDTO) ToDomain() models.Order {
 	order := d.Order.ToDomain()
 	order.EventId = d.EventID
 	order.CreatedAt = d.Timestamp
@@ -23,7 +24,7 @@ func (d *OrderEventDTO) ToDomain() m.Order {
 		order.EventId = uuid.New()
 	}
 	if order.CreatedAt.IsZero() {
-		order.CreatedAt = t.Now()
+		order.CreatedAt = time.Now()
 	}
 
 	return order

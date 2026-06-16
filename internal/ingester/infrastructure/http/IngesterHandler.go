@@ -1,9 +1,10 @@
 package http
 
 import (
-	"main/internal/ingester/app/dtos"
-	"main/internal/ingester/app/services"
 	"net/http"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

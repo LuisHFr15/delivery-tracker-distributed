@@ -1,7 +1,7 @@
 package dtos
 
 import (
-	m "main/internal/ingester/domain/models"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/domain/models"
 
 	"github.com/google/uuid"
 )
@@ -14,10 +14,10 @@ type OrderDTO struct {
 	Status     string         `json:"status"`
 }
 
-func (d *OrderDTO) ToDomain() m.Order {
-	order := m.Order{
+func (d *OrderDTO) ToDomain() models.Order {
+	order := models.Order{
 		Id:         d.ID,
-		Client:     m.Client{Id: d.ClientID},
+		Client:     models.Client{Id: d.ClientID},
 		DeliveryId: d.DeliveryID,
 		Status:     d.Status,
 	}

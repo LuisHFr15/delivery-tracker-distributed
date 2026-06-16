@@ -1,4 +1,4 @@
-module main
+module github.com/LuisHFr15/delivery-tracker-distributed
 
 go 1.26.4
 

@@ -2,7 +2,8 @@ package services
 
 import (
 	"context"
-	"main/internal/ingester/app/dtos"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
 
 	"github.com/google/uuid"
 )

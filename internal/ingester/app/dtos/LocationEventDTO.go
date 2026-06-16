@@ -1,8 +1,9 @@
 package dtos
 
 import (
-	m "main/internal/ingester/domain/models"
-	t "time"
+	"time"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/domain/models"
 
 	"github.com/google/uuid"
 )
@@ -12,10 +13,10 @@ type LocationEventDTO struct {
 	OrderID   uuid.UUID `json:"order_id"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
-	Timestamp t.Time    `json:"timestamp,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
 }
 
-func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, m.Location, t.Time) {
+func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, models.Location, time.Time) {
 	eventId := d.EventID
 	if eventId == uuid.Nil {
 		eventId = uuid.New()
@@ -23,10 +24,10 @@ func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, m.Location, t.Time)
 
 	timestamp := d.Timestamp
 	if timestamp.IsZero() {
-		timestamp = t.Now()
+		timestamp = time.Now()
 	}
 
-	return eventId, d.OrderID, m.Location{
+	return eventId, d.OrderID, models.Location{
 		Lat: d.Latitude,
 		Lng: d.Longitude,
 	}, timestamp

@@ -11,5 +11,7 @@
 
 go.work
 
-.agentic
+docs/.agentic/
 .idea
+
+TODO.md

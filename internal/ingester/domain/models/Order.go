@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	t "time"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -29,13 +29,13 @@ type Order struct {
 	Destination Location    `json:"destination"`
 	DeliveryId  *uuid.UUID  `json:"delivery_id,omitempty"`
 	Status      string      `json:"status"`
-	CreatedAt   t.Time      `json:"timestamp"`
+	CreatedAt   time.Time   `json:"timestamp"`
 	IsCancelled bool        `json:"is_cancelled"`
-	CancelledAt *t.Time     `json:"cancelled_at,omitempty"`
-	DeliveredAt *t.Time     `json:"delivered_at,omitempty"`
+	CancelledAt *time.Time  `json:"cancelled_at,omitempty"`
+	DeliveredAt *time.Time  `json:"delivered_at,omitempty"`
 }
 
-func (o *Order) CalculateTimeToDelivery() (t.Duration, error) {
+func (o *Order) CalculateTimeToDelivery() (time.Duration, error) {
 	if o.DeliveredAt == nil {
 		return 0, fmt.Errorf("%w: order %s", ErrOrderNotDelivered, o.Id)
 	}
@@ -43,7 +43,7 @@ func (o *Order) CalculateTimeToDelivery() (t.Duration, error) {
 	return o.DeliveredAt.Sub(o.CreatedAt), nil
 }
 
-func (o *Order) CalculateTimeToCancel() (t.Duration, error) {
+func (o *Order) CalculateTimeToCancel() (time.Duration, error) {
 	if !o.IsCancelled || o.CancelledAt == nil {
 		return 0, ErrOrderNotCancelled
 	}
@@ -61,7 +61,7 @@ func (o *Order) UpdateOrderStatus(eventId uuid.UUID, status string) error {
 }
 
 func (o *Order) CancelOrder() {
-	now := t.Now()
+	now := time.Now()
 	o.IsCancelled = true
 	o.CancelledAt = &now
 	o.Status = "CANCELLED"
@@ -77,7 +77,7 @@ func (o *Order) Deliver(eventId uuid.UUID, actualLocation Location) error {
 		return err
 	}
 
-	now := t.Now()
+	now := time.Now()
 	o.DeliveredAt = &now
 	return nil
 }

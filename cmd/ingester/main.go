@@ -1,10 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"main/internal/ingester/app/services"
-	"main/internal/ingester/infrastructure/http"
-	"main/internal/ingester/infrastructure/queues"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	infrahttp "github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/infrastructure/http"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/infrastructure/queues"
+	"net/http"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,23 +23,39 @@ func main() {
 
 	publisher := queues.NewKafkaPublisher()
 	service := services.NewIngesterService(publisher)
-	/*
-		defer statement: follow LIFO, aka, stack-like steps
-		it executes the deferred function after the surrounding function declares it is returning something (error, value, nil)
-		in this case, is like delaying the close Kafka connection when the program ends its execution
-
-		it executes exactly after the return arguments are set, but before exiting the surrounding function
-	*/
 	defer publisher.Close()
 
-	handler := http.NewIngesterHandler(service)
+	handler := infrahttp.NewIngesterHandler(service)
 
 	r := gin.Default()
-
 	api := r.Group("/api")
 
-	http.RegisterIngesterRoutes(api, handler)
+	infrahttp.RegisterIngesterRoutes(api, handler)
 
 	fmt.Println("Ingester server running on :8080")
-	r.Run(":8080")
+	srv := &http.Server{Addr: ":8080", Handler: r}
+	ctx := context.Background()
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	/*
+		Program sleeping until the SIGINT or SIGTERM is notified to the kernel and passed to que process
+		the channel quit receives the signal and then "steals" the control so it can shut down the process gracefully
+	*/
+	<-quit
+	fmt.Println("Shutting down...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	publisher.Close()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("shutdown failed: %v", err)
+	}
+	fmt.Println("Server stopped cleanly")
 }
