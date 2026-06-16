@@ -1,4 +1,4 @@
-package orders
+package models
 
 import (
 	"errors"
@@ -22,8 +22,8 @@ type OrderItem struct {
 }
 
 type Order struct {
-	EventId     uuid.UUID   `json:"event_id"`
-	Id          uuid.UUID   `json:"id"`
+	EventId     uuid.UUID   `json:"event_id,omitempty"`
+	Id          uuid.UUID   `json:"id,omitempty"`
 	Products    []OrderItem `json:"products"`
 	Client      Client      `json:"client"`
 	Destination Location    `json:"destination"`

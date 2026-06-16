@@ -1,4 +1,4 @@
-package orders
+package models
 
 type Location struct {
 	Lat float64 `json:"lat"`
