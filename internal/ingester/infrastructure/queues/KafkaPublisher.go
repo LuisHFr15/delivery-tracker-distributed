@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"main/internal/domain/models/events"
+	"main/internal/ingester/app/dtos"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -35,27 +36,28 @@ func NewKafkaPublisher() *KafkaPublisher {
 	}
 }
 
-func (p *KafkaPublisher) PublishOrderEvent(ctx context.Context, event events.OrderEvent) error {
-	value, err := json.Marshal(event)
+func (p *KafkaPublisher) PublishOrder(ctx context.Context, dto dtos.OrderEventDTO) error {
+	value, err := json.Marshal(dto)
 	if err != nil {
-		return fmt.Errorf("failed to marshal order event: %w", err)
+		return fmt.Errorf("failed to marshal order: %w", err)
 	}
 
 	return p.orderWriter.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(event.Id.String()),
+		Key:   []byte(dto.Order.ID.String()),
 		Value: value,
 	})
 }
 
-func (p *KafkaPublisher) PublishLocationEvent(ctx context.Context, event events.LocationEvent) error {
-	value, err := json.Marshal(event)
+// TODO: unitary tests and batch tests
+// TODO: verificar como ficou a o application service e o handler, se aplicou corretamente os middlewares e routes
+func (p *KafkaPublisher) PublishLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error {
+	value, err := json.Marshal(dto)
 	if err != nil {
 		return fmt.Errorf("failed to marshal location event: %w", err)
 	}
 
-	// context lib -> propagate cancellation signals, signal lifecycles
 	return p.locationWriter.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(event.OrderId.String()),
+		Key:   []byte(orderId.String()),
 		Value: value,
 	})
 }

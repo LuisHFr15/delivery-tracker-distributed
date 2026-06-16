@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"main/internal/app/ingester"
-	"main/internal/infrastructure/queues"
+	"main/internal/ingester/app/services"
+	"main/internal/ingester/infrastructure/http"
+	"main/internal/ingester/infrastructure/queues"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +13,7 @@ func main() {
 	fmt.Println("Ingester starting...")
 
 	publisher := queues.NewKafkaPublisher()
+	service := services.NewIngesterService(publisher)
 	/*
 		defer statement: follow LIFO, aka, stack-like steps
 		it executes the deferred function after the surrounding function declares it is returning something (error, value, nil)
@@ -21,13 +23,13 @@ func main() {
 	*/
 	defer publisher.Close()
 
-	handler := ingester.NewIngesterHandler(publisher)
+	handler := http.NewIngesterHandler(service)
 
 	r := gin.Default()
 
 	api := r.Group("/api")
 
-	handler.RegisterRoutes(api)
+	http.RegisterIngesterRoutes(api, handler)
 
 	fmt.Println("Ingester server running on :8080")
 	r.Run(":8080")
