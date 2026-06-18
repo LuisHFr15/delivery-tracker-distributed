@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
 
@@ -22,9 +23,15 @@ func NewIngesterService(publisher EventPublisher) *IngesterService {
 }
 
 func (s *IngesterService) IngestOrder(ctx context.Context, order dtos.OrderEventDTO) error {
+	if order.Order.ID == uuid.Nil {
+		return fmt.Errorf("order id is required to ingest order")
+	}
 	return s.publisher.PublishOrder(ctx, order)
 }
 
 func (s *IngesterService) IngestLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error {
+	if orderId == uuid.Nil {
+		return fmt.Errorf("order id is required to ingest location")
+	}
 	return s.publisher.PublishLocation(ctx, dto, orderId)
 }

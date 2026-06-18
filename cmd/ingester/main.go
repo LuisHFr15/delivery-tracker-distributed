@@ -34,7 +34,6 @@ func main() {
 
 	fmt.Println("Ingester server running on :8080")
 	srv := &http.Server{Addr: ":8080", Handler: r}
-	ctx := context.Background()
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -44,10 +43,7 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	/*
-		Program sleeping until the SIGINT or SIGTERM is notified to the kernel and passed to que process
-		the channel quit receives the signal and then "steals" the control so it can shut down the process gracefully
-	*/
+	// Bloqueia até receber SIGINT/SIGTERM; aí inicia o shutdown ordenado.
 	<-quit
 	fmt.Println("Shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
