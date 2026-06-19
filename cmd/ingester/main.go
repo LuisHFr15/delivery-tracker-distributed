@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"net/http"
+
 	infrahttp "github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/infrastructure/http"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/infrastructure/queues"
-	"net/http"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/services"
 
@@ -43,7 +44,9 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	// Bloqueia até receber SIGINT/SIGTERM; aí inicia o shutdown ordenado.
+	/*
+		blocking operation until receive SIGINT or SIGTERM
+	*/
 	<-quit
 	fmt.Println("Shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

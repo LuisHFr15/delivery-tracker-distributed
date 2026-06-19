@@ -25,7 +25,7 @@ func NewIngesterHandler(service IngesterServicer) *IngesterHandler {
 	}
 }
 
-func (h *IngesterHandler) CreateOrder(c *gin.Context) {
+func (h *IngesterHandler) TrackOrder(c *gin.Context) {
 	var orderDto dtos.OrderEventDTO
 	if err := c.ShouldBindJSON(&orderDto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request format", "details": err.Error()})

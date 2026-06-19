@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 	"testing"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
@@ -10,10 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// FakePublisher é um fake "burro": apenas registra o que recebeu e devolve
-// ErrToReturn. Não serializa nem valida — toda a lógica que queremos exercitar
-// mora no IngesterService, não aqui. Se o fake tivesse lógica, o teste estaria
-// verificando se fake e service concordam, não se o service está correto.
 type FakePublisher struct {
 	OrdersSent    []dtos.OrderEventDTO
 	LocationsSent []dtos.LocationEventDTO
@@ -65,6 +62,7 @@ func TestIngesterService_IngestOrder(t *testing.T) {
 		},
 	}
 
+	log.Println("Testing OrderIngest")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fake := &FakePublisher{ErrToReturn: tt.publishErr}
@@ -78,6 +76,10 @@ func TestIngesterService_IngestOrder(t *testing.T) {
 			if len(fake.OrdersSent) != tt.wantSent {
 				t.Errorf("orders sent = %d, want %d", len(fake.OrdersSent), tt.wantSent)
 			}
+
+			log.Println(tt.name, tt.order.Order.ID)
+			log.Println("Need err?", tt.wantErr)
+			log.Println(fake.OrdersSent)
 		})
 	}
 }
@@ -111,6 +113,7 @@ func TestIngesterService_IngestLocation(t *testing.T) {
 		},
 	}
 
+	log.Println("Testing LocationIngest")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fake := &FakePublisher{ErrToReturn: tt.publishErr}
@@ -124,6 +127,9 @@ func TestIngesterService_IngestLocation(t *testing.T) {
 			if len(fake.LocationsSent) != tt.wantSent {
 				t.Errorf("locations sent = %d, want %d", len(fake.LocationsSent), tt.wantSent)
 			}
+			log.Println(tt.name, tt.orderId)
+			log.Println("Need err?", tt.wantErr)
+			log.Println(fake.LocationsSent)
 		})
 	}
 }

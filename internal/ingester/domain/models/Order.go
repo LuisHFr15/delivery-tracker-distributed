@@ -14,6 +14,8 @@ var (
 	ErrOrderNotDelivered        = errors.New("order has not been delivered yet")
 	ErrDeliveryLocationMismatch = errors.New("delivery location does not match destination")
 	ErrInvalidStatus            = errors.New("invalid status: cannot be empty")
+	ErrMissingCrucialData       = errors.New("missing data required")
+	ErrInvalidOperation         = errors.New("this operation can't be performed to this order")
 )
 
 type OrderItem struct {
@@ -22,30 +24,37 @@ type OrderItem struct {
 }
 
 type Order struct {
-	EventId     uuid.UUID   `json:"event_id,omitempty"`
-	Id          uuid.UUID   `json:"id,omitempty"`
-	Products    []OrderItem `json:"products"`
-	Client      Client      `json:"client"`
-	Destination Location    `json:"destination"`
-	DeliveryId  *uuid.UUID  `json:"delivery_id,omitempty"`
-	Status      string      `json:"status"`
-	CreatedAt   time.Time   `json:"timestamp"`
-	IsCancelled bool        `json:"is_cancelled"`
-	CancelledAt *time.Time  `json:"cancelled_at,omitempty"`
-	DeliveredAt *time.Time  `json:"delivered_at,omitempty"`
+	EventId     uuid.UUID
+	Id          uuid.UUID
+	Products    []OrderItem
+	Client      Client
+	Destination Location
+	DeliveryId  *uuid.UUID
+	Status      string
+	CreatedAt   time.Time
+	CancelledAt *time.Time
+	DeliveredAt *time.Time
 }
 
 func (o *Order) CalculateTimeToDelivery() (time.Duration, error) {
-	if o.DeliveredAt == nil {
+	if !o.isDelivered() {
 		return 0, fmt.Errorf("%w: order %s", ErrOrderNotDelivered, o.Id)
+	}
+
+	if o.CreatedAt.IsZero() {
+		return 0, fmt.Errorf("%w: %s order %s", ErrMissingCrucialData, "createdAt", o.Id)
 	}
 
 	return o.DeliveredAt.Sub(o.CreatedAt), nil
 }
 
 func (o *Order) CalculateTimeToCancel() (time.Duration, error) {
-	if !o.IsCancelled || o.CancelledAt == nil {
+	if !o.isCanceled() {
 		return 0, ErrOrderNotCancelled
+	}
+
+	if o.CreatedAt.IsZero() {
+		return 0, fmt.Errorf("%w: %s to order %s", ErrMissingCrucialData, "createdAt", o.Id)
 	}
 
 	return o.CancelledAt.Sub(o.CreatedAt), nil
@@ -61,18 +70,35 @@ func (o *Order) UpdateOrderStatus(eventId uuid.UUID, status string) error {
 }
 
 func (o *Order) CancelOrder() {
+	if o.CancelledAt != nil {
+		return
+	}
 	now := time.Now()
-	o.IsCancelled = true
 	o.CancelledAt = &now
 	o.Status = "CANCELLED"
 }
 
+func (o *Order) isCanceled() bool {
+	return o.Status == "CANCELLED" && o.CancelledAt != nil && !o.CancelledAt.IsZero()
+}
+
+func (o *Order) isDelivered() bool {
+	return o.Status == "DELIVERED" && o.DeliveredAt != nil && !o.DeliveredAt.IsZero()
+}
+
 func (o *Order) Deliver(eventId uuid.UUID, actualLocation Location) error {
+	if o.isDelivered() {
+		return fmt.Errorf("%w: event %s tried to deliver order already delivered %s", ErrInvalidOperation, eventId, o.Id)
+	}
+	if o.isCanceled() {
+		return fmt.Errorf("%w: event %s tried to deliver order already canceled", ErrInvalidOperation, eventId)
+	}
+
 	if !o.Destination.SameLocation(actualLocation) {
 		return fmt.Errorf("%w: expected %v, got %v", ErrDeliveryLocationMismatch, o.Destination, actualLocation)
 	}
 
-	err := o.UpdateOrderStatus(eventId, "COMPLETED")
+	err := o.UpdateOrderStatus(eventId, "DELIVERED")
 	if err != nil {
 		return err
 	}
