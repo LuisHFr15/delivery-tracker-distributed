@@ -1,25 +1,31 @@
 package http
 
 import (
-	"main/internal/ingester/app/dtos"
-	"main/internal/ingester/app/services"
+	"context"
 	"net/http"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-type IngesterHandler struct {
-	service *services.IngesterService
+type IngesterServicer interface {
+	IngestOrder(ctx context.Context, order dtos.OrderEventDTO) error
+	IngestLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error
 }
 
-func NewIngesterHandler(service *services.IngesterService) *IngesterHandler {
+type IngesterHandler struct {
+	service IngesterServicer
+}
+
+func NewIngesterHandler(service IngesterServicer) *IngesterHandler {
 	return &IngesterHandler{
 		service: service,
 	}
 }
 
-func (h *IngesterHandler) CreateOrder(c *gin.Context) {
+func (h *IngesterHandler) TrackOrder(c *gin.Context) {
 	var orderDto dtos.OrderEventDTO
 	if err := c.ShouldBindJSON(&orderDto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request format", "details": err.Error()})

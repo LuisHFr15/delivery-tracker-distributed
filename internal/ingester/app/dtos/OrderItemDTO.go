@@ -1,7 +1,7 @@
 package dtos
 
 import (
-	m "main/internal/ingester/domain/models"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/domain/models"
 
 	"github.com/google/uuid"
 )
@@ -11,9 +11,9 @@ type OrderItemDTO struct {
 	Quantity  int32     `json:"quantity"`
 }
 
-func (d *OrderItemDTO) ToDomain() m.OrderItem {
-	return m.OrderItem{
-		Product: m.Product{
+func (d *OrderItemDTO) ToDomain() models.OrderItem {
+	return models.OrderItem{
+		Product: models.Product{
 			Id: d.ProductID,
 		},
 		Quantity: d.Quantity,

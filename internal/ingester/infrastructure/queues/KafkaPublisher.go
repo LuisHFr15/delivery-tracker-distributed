@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"main/internal/ingester/app/dtos"
 	"os"
+
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
 
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
@@ -24,14 +25,16 @@ func NewKafkaPublisher() *KafkaPublisher {
 
 	return &KafkaPublisher{
 		orderWriter: &kafka.Writer{
-			Addr:     kafka.TCP(broker),
-			Topic:    "order-events",
-			Balancer: &kafka.LeastBytes{},
+			Addr:                   kafka.TCP(broker),
+			Topic:                  "order-events",
+			Balancer:               &kafka.LeastBytes{},
+			AllowAutoTopicCreation: true,
 		},
 		locationWriter: &kafka.Writer{
-			Addr:     kafka.TCP(broker),
-			Topic:    "location-events",
-			Balancer: &kafka.LeastBytes{},
+			Addr:                   kafka.TCP(broker),
+			Topic:                  "location-events",
+			Balancer:               &kafka.LeastBytes{},
+			AllowAutoTopicCreation: true,
 		},
 	}
 }
@@ -48,8 +51,6 @@ func (p *KafkaPublisher) PublishOrder(ctx context.Context, dto dtos.OrderEventDT
 	})
 }
 
-// TODO: unitary tests and batch tests
-// TODO: verificar como ficou a o application service e o handler, se aplicou corretamente os middlewares e routes
 func (p *KafkaPublisher) PublishLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error {
 	value, err := json.Marshal(dto)
 	if err != nil {
