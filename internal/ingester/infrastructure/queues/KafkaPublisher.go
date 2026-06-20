@@ -25,14 +25,16 @@ func NewKafkaPublisher() *KafkaPublisher {
 
 	return &KafkaPublisher{
 		orderWriter: &kafka.Writer{
-			Addr:     kafka.TCP(broker),
-			Topic:    "order-events",
-			Balancer: &kafka.LeastBytes{},
+			Addr:                   kafka.TCP(broker),
+			Topic:                  "order-events",
+			Balancer:               &kafka.LeastBytes{},
+			AllowAutoTopicCreation: true,
 		},
 		locationWriter: &kafka.Writer{
-			Addr:     kafka.TCP(broker),
-			Topic:    "location-events",
-			Balancer: &kafka.LeastBytes{},
+			Addr:                   kafka.TCP(broker),
+			Topic:                  "location-events",
+			Balancer:               &kafka.LeastBytes{},
+			AllowAutoTopicCreation: true,
 		},
 	}
 }
