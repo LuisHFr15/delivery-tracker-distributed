@@ -7,8 +7,9 @@ import (
 )
 
 func RegisterIngesterRoutes(router *gin.RouterGroup, handler *IngesterHandler) {
-	router.Use(MetricsMiddleware(), TimeoutMiddleware(time.Millisecond*100))
+	router.Use(MetricsMiddleware(), TimeoutMiddleware(time.Millisecond*2000))
 
 	router.POST("/order", handler.TrackOrder)
 	router.POST("/order/:id/location", handler.UpdateLocation)
+	router.GET("/health", handler.Health)
 }

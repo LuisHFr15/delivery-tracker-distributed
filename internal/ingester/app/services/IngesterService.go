@@ -35,3 +35,7 @@ func (s *IngesterService) IngestLocation(ctx context.Context, dto dtos.LocationE
 	}
 	return s.publisher.PublishLocation(ctx, dto, orderId)
 }
+
+func (s *IngesterService) Health(ctx context.Context) error {
+	return nil
+}

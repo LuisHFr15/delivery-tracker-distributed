@@ -13,6 +13,7 @@ import (
 type IngesterServicer interface {
 	IngestOrder(ctx context.Context, order dtos.OrderEventDTO) error
 	IngestLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error
+	Health(ctx context.Context) error
 }
 
 type IngesterHandler struct {
@@ -60,4 +61,11 @@ func (h *IngesterHandler) UpdateLocation(c *gin.Context) {
 	}
 
 	c.Status(http.StatusAccepted)
+}
+
+func (h *IngesterHandler) Health(c *gin.Context) {
+	if err := h.service.Health(c.Request.Context()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
