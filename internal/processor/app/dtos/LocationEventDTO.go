@@ -3,7 +3,7 @@ package dtos
 import (
 	"time"
 
-	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/domain/models"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
 
 	"github.com/google/uuid"
 )
@@ -16,7 +16,7 @@ type LocationEventDTO struct {
 	Timestamp time.Time `json:"timestamp,omitempty"`
 }
 
-func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, models.Location, time.Time) {
+func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, order.Location, time.Time) {
 	eventId := d.EventID
 	if eventId == uuid.Nil {
 		eventId = uuid.New()
@@ -27,7 +27,7 @@ func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, models.Location, ti
 		timestamp = time.Now()
 	}
 
-	return eventId, d.OrderID, models.Location{
+	return eventId, d.OrderID, order.Location{
 		Lat: d.Latitude,
 		Lng: d.Longitude,
 	}, timestamp

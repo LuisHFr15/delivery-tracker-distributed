@@ -1,4 +1,4 @@
-package models
+package order
 
 import "github.com/google/uuid"
 

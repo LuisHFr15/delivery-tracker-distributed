@@ -3,7 +3,7 @@ package dtos
 import (
 	"time"
 
-	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/domain/models"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
 
 	"github.com/google/uuid"
 )
@@ -15,7 +15,7 @@ type OrderEventDTO struct {
 	Timestamp       time.Time `json:"timestamp,omitempty"`
 }
 
-func (d *OrderEventDTO) ToDomain() models.Order {
+func (d *OrderEventDTO) ToDomain() order.Order {
 	order := d.Order.ToDomain()
 	order.EventId = d.EventID
 	order.CreatedAt = d.Timestamp
