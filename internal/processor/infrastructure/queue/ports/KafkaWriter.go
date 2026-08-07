@@ -1,4 +1,4 @@
-package infrastructure
+package ports
 
 import "github.com/segmentio/kafka-go"
 
