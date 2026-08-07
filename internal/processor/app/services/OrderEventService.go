@@ -8,7 +8,6 @@ import (
 	repo "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/ports"
 )
 
-// TODO: create the usage to save both order event and order inside the dynamo
 type OrderEventService struct {
 	dto       dtos.OrderEventDTO
 	auditRepo repo.AuditingEventRepository

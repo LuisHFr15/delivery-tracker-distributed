@@ -99,10 +99,7 @@ func TestKafkaPublisher_Integration(t *testing.T) {
 	}
 
 	t.Log("Publishing Order Event...")
-	err = publisher.PublishOrder(ctx, orderEvent)
-	if err != nil {
-		t.Fatalf("failed to publish order: %v", err)
-	}
+	publisher.PublishOrder(orderEvent)
 
 	t.Log("Consuming published Order Event for assertion...")
 	orderReader := kafka.NewReader(kafka.ReaderConfig{
@@ -147,10 +144,7 @@ func TestKafkaPublisher_Integration(t *testing.T) {
 	}
 
 	t.Log("Publishing Location Event...")
-	err = publisher.PublishLocation(ctx, locationEvent, orderID)
-	if err != nil {
-		t.Fatalf("failed to publish location: %v", err)
-	}
+	publisher.PublishLocation(locationEvent)
 
 	t.Log("Consuming published Location Event for assertion...")
 	locationReader := kafka.NewReader(kafka.ReaderConfig{

@@ -7,12 +7,11 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type IngesterServicer interface {
 	IngestOrder(ctx context.Context, order dtos.OrderEventDTO) error
-	IngestLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error
+	IngestLocation(ctx context.Context, dto dtos.LocationEventDTO) error
 	Health(ctx context.Context) error
 }
 
@@ -42,20 +41,13 @@ func (h *IngesterHandler) TrackOrder(c *gin.Context) {
 }
 
 func (h *IngesterHandler) UpdateLocation(c *gin.Context) {
-	orderIdStr := c.Param("id")
-	orderId, err := uuid.Parse(orderIdStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order id format"})
-		return
-	}
-
 	var locationDto dtos.LocationEventDTO
 	if err := c.ShouldBindJSON(&locationDto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request format"})
 		return
 	}
 
-	if err := h.service.IngestLocation(c.Request.Context(), locationDto, orderId); err != nil {
+	if err := h.service.IngestLocation(c.Request.Context(), locationDto); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process location", "details": err.Error()})
 		return
 	}
