@@ -16,7 +16,7 @@ type KafkaReadOrderTopic struct {
 	reader *kafka.Reader
 }
 
-func NewKafkaReadOrderTopic(reader *kafka.Reader) *KafkaReadOrderTopic {
+func NewKafkaReadOrderTopic() *KafkaReadOrderTopic {
 	broker := os.Getenv("KAFKA_BROKER")
 	if broker == "" {
 		broker = "localhost:9092"
@@ -48,4 +48,8 @@ func (k *KafkaReadOrderTopic) Read(ctx context.Context) (dtos.OrderEventDTO, err
 	}
 
 	return dto, nil
+}
+
+func (k *KafkaReadOrderTopic) Close() error {
+	return k.reader.Close()
 }

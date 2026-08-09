@@ -16,7 +16,7 @@ type KafkaReadLocationTopic struct {
 	reader *kafka.Reader
 }
 
-func NewKafkaReadLocationTopic(reader *kafka.Reader) *KafkaReadLocationTopic {
+func NewKafkaReadLocationTopic() *KafkaReadLocationTopic {
 	broker := os.Getenv("KAFKA_BROKER")
 	if broker == "" {
 		broker = "localhost:9092"
@@ -47,4 +47,8 @@ func (k *KafkaReadLocationTopic) Read(ctx context.Context) (dtos.LocationEventDT
 		return dtos.LocationEventDTO{}, err
 	}
 	return dto, nil
+}
+
+func (k *KafkaReadLocationTopic) Close() error {
+	return k.reader.Close()
 }

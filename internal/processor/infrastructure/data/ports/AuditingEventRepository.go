@@ -6,4 +6,6 @@ import (
 
 type AuditingEventRepository interface {
 	Add(cls data.DynamoEvent)
+	RunWorker()
+	StopWorker()
 }

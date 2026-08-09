@@ -3,10 +3,12 @@ package dynamo
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
@@ -17,10 +19,14 @@ type DynamoAuditingEventRepository struct {
 	buffer    chan *data.DynamoEvent
 }
 
-func NewDynamoAuditingEventRepository(tableName string, client *dynamodb.Client) *DynamoAuditingEventRepository {
+func NewDynamoAuditingEventRepository(ctx context.Context) *DynamoAuditingEventRepository {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		log.Fatalf("unable to load SDK config, %v", err)
+	}
 	return &DynamoAuditingEventRepository{
-		tableName: tableName,
-		client:    client,
+		tableName: os.Getenv("DYNAMODB_AUDITING_TABLE_NAME"),
+		client:    dynamodb.NewFromConfig(cfg),
 		buffer:    make(chan *data.DynamoEvent, 5),
 	}
 }
@@ -33,6 +39,10 @@ func (d *DynamoAuditingEventRepository) RunWorker() {
 	defer close(d.buffer)
 	for cls := range d.buffer {
 		item, err := attributevalue.MarshalMap(cls)
+
+		if err != nil {
+			log.Printf("Error serializing DynamoAuditingEvent item: %s", err)
+		}
 
 		reqCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 

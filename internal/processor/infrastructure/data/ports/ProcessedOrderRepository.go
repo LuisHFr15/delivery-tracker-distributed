@@ -8,4 +8,6 @@ import (
 
 type ProcessedOrderRepository interface {
 	Add(ctx context.Context, dto data.ProcessedOrder) error
+	RunWorker()
+	StopWorker()
 }

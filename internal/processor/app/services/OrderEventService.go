@@ -1,8 +1,6 @@
 package services
 
 import (
-	"context"
-
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
 	repo "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/ports"
@@ -14,16 +12,15 @@ type OrderEventService struct {
 	converter services.ConvertOrderEvent
 }
 
-func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRepository,
-	converter services.ConvertOrderEvent) OrderEventService {
+func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRepository) OrderEventService {
 	return OrderEventService{
 		dto:       dto,
 		auditRepo: auditRepo,
-		converter: converter,
+		converter: services.NewConvertOrderEvent(),
 	}
 }
 
-func (ee OrderEventService) ConvertEvent(ctx context.Context) {
+func (ee OrderEventService) ConvertEvent() {
 	converter := ee.converter
 	originalEvent := ee.dto
 	convertedEvent := converter.Convert(originalEvent)
