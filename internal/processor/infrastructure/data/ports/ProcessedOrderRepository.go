@@ -7,5 +7,5 @@ import (
 type ProcessedOrderRepository interface {
 	Add(dto data.ProcessedOrder)
 	RunWorker()
-	StopWorker()
+	StopWorker() error
 }

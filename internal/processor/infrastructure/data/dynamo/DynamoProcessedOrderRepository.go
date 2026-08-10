@@ -17,6 +17,7 @@ type DynamoProcessedOrderRepository struct {
 	tableName string
 	client    *dynamodb.Client
 	buffer    chan *data.ProcessedOrder
+	done      chan struct{}
 }
 
 func NewDynamoProcessedOrderRepository(ctx context.Context) *DynamoProcessedOrderRepository {
@@ -29,6 +30,7 @@ func NewDynamoProcessedOrderRepository(ctx context.Context) *DynamoProcessedOrde
 		tableName: os.Getenv("DYNAMODB_PROCESSED_ORDER_TABLE_NAME"),
 		client:    dynamodb.NewFromConfig(cfg),
 		buffer:    make(chan *data.ProcessedOrder),
+		done:      make(chan struct{}),
 	}
 }
 
@@ -37,7 +39,7 @@ func (d *DynamoProcessedOrderRepository) Add(cls data.ProcessedOrder) {
 }
 
 func (d *DynamoProcessedOrderRepository) RunWorker() {
-	defer close(d.buffer)
+	defer close(d.done)
 	for cls := range d.buffer {
 		item, err := attributevalue.MarshalMap(cls)
 
@@ -59,6 +61,8 @@ func (d *DynamoProcessedOrderRepository) RunWorker() {
 	}
 }
 
-func (d *DynamoProcessedOrderRepository) StopWorker() {
+func (d *DynamoProcessedOrderRepository) StopWorker() error {
 	close(d.buffer)
+	<-d.done
+	return nil
 }

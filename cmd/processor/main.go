@@ -21,9 +21,11 @@ func main() {
 	processedRepo := dynamo.NewDynamoProcessedOrderRepository(ctx)
 	orderTopicReader := infrastructure.NewKafkaReadOrderTopic()
 	locationTopicReader := infrastructure.NewKafkaReadLocationTopic()
+	notificationWriter := infrastructure.NewKafkaWriteNotification()
 
-	auditingRepo.RunWorker()
-	processedRepo.RunWorker()
+	go auditingRepo.RunWorker()
+	go processedRepo.RunWorker()
+	go notificationWriter.RunWorker()
 
 	var readersWg sync.WaitGroup
 
@@ -73,7 +75,7 @@ func main() {
 	log.Println("Closing Kafka connections...")
 	err := orderTopicReader.Close()
 	if err != nil {
-		log.Printf("Failed to close Kafka connections: %v", err)
+		log.Printf("Failed to close Kafka connection¡s: %v", err)
 	}
 	err = locationTopicReader.Close()
 	if err != nil {
@@ -83,22 +85,26 @@ func main() {
 	readersWg.Wait()
 	log.Println("Readers stopped.")
 
-	var reposWg sync.WaitGroup
-	shutdownRepo := func(name string, closeFunc func()) {
-		reposWg.Add(1)
+	var outputWg sync.WaitGroup
+	shutdownOutput := func(name string, closeFunc func() error) {
+		outputWg.Add(1)
 		go func() {
-			defer reposWg.Done()
-			closeFunc()
+			defer outputWg.Done()
+			err := closeFunc()
+			if err != nil {
+				log.Printf("Failed to close connection to component %s: %v", name, err)
+			}
 			log.Printf("Shutdown component %s", name)
 		}()
 	}
 
-	shutdownRepo("Processed Order Repo", processedRepo.StopWorker)
-	shutdownRepo("Auditing Repo", auditingRepo.StopWorker)
+	go shutdownOutput("Processed Order Repo", processedRepo.StopWorker)
+	go shutdownOutput("Auditing Repo", auditingRepo.StopWorker)
+	go shutdownOutput("Kafka Writer", notificationWriter.StopWorker)
 
 	shutdownComplete := make(chan struct{})
 	go func() {
-		reposWg.Wait()
+		outputWg.Wait()
 		close(shutdownComplete)
 	}()
 

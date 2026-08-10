@@ -17,6 +17,7 @@ type DynamoAuditingEventRepository struct {
 	tableName string
 	client    *dynamodb.Client
 	buffer    chan *data.DynamoEvent
+	done      chan struct{}
 }
 
 func NewDynamoAuditingEventRepository(ctx context.Context) *DynamoAuditingEventRepository {
@@ -28,6 +29,7 @@ func NewDynamoAuditingEventRepository(ctx context.Context) *DynamoAuditingEventR
 		tableName: os.Getenv("DYNAMODB_AUDITING_TABLE_NAME"),
 		client:    dynamodb.NewFromConfig(cfg),
 		buffer:    make(chan *data.DynamoEvent, 5),
+		done:      make(chan struct{}),
 	}
 }
 
@@ -36,7 +38,7 @@ func (d *DynamoAuditingEventRepository) Add(cls data.DynamoEvent) {
 }
 
 func (d *DynamoAuditingEventRepository) RunWorker() {
-	defer close(d.buffer)
+	defer close(d.done)
 	for cls := range d.buffer {
 		item, err := attributevalue.MarshalMap(cls)
 
@@ -57,9 +59,10 @@ func (d *DynamoAuditingEventRepository) RunWorker() {
 			log.Println("Error putting item in DynamoDb", err)
 		}
 	}
-	log.Println("DynamoAuditingEventRepository finished")
 }
 
-func (d *DynamoAuditingEventRepository) StopWorker() {
+func (d *DynamoAuditingEventRepository) StopWorker() error {
 	close(d.buffer)
+	<-d.done
+	return nil
 }

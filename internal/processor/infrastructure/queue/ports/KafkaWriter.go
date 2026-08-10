@@ -1,8 +1,7 @@
 package ports
 
-import "github.com/segmentio/kafka-go"
+import "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
 
 type KafkaWriter interface {
-	// TODO: create the notification DTO
-	Write(partition int32, offset int64, message *kafka.Message) error
+	Write(dto dtos.ProcessedOrderDTO)
 }

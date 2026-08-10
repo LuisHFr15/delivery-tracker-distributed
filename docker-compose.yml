@@ -64,6 +64,7 @@ services:
       KAFKA_BROKER: kafka:29092
       DYNAMODB_AUDITING_TABLE_NAME: delivery-auditing
       DYNAMODB_PROCESSED_ORDER_TABLE_NAME: delivery-processing
+      AWS_PROFILE: delivery-processor
     networks:
       - delivery-network
 
