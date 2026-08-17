@@ -28,7 +28,7 @@ func NewDynamoAuditingEventRepository(ctx context.Context) *DynamoAuditingEventR
 	return &DynamoAuditingEventRepository{
 		tableName: os.Getenv("DYNAMODB_AUDITING_TABLE_NAME"),
 		client:    dynamodb.NewFromConfig(cfg),
-		buffer:    make(chan *data.DynamoEvent, 5),
+		buffer:    make(chan *data.DynamoEvent),
 		done:      make(chan struct{}),
 	}
 }
@@ -40,7 +40,9 @@ func (d *DynamoAuditingEventRepository) Add(cls data.DynamoEvent) {
 func (d *DynamoAuditingEventRepository) RunWorker() {
 	defer close(d.done)
 	for cls := range d.buffer {
-		item, err := attributevalue.MarshalMap(cls)
+		item, err := attributevalue.MarshalMapWithOptions(cls, func(o *attributevalue.EncoderOptions) {
+			o.UseEncodingMarshalers = true
+		})
 
 		if err != nil {
 			log.Printf("Error serializing DynamoAuditingEvent item: %s", err)

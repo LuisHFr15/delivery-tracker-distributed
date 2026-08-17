@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type DynamoProcessedOrderRepository struct {
@@ -41,7 +42,9 @@ func (d *DynamoProcessedOrderRepository) Add(cls data.ProcessedOrder) {
 func (d *DynamoProcessedOrderRepository) RunWorker() {
 	defer close(d.done)
 	for cls := range d.buffer {
-		item, err := attributevalue.MarshalMap(cls)
+		item, err := attributevalue.MarshalMapWithOptions(cls, func(o *attributevalue.EncoderOptions) {
+			o.UseEncodingMarshalers = true
+		})
 
 		if err != nil {
 			log.Printf("Error serializing ProcessedOrder item: %s", err)
@@ -65,4 +68,39 @@ func (d *DynamoProcessedOrderRepository) StopWorker() error {
 	close(d.buffer)
 	<-d.done
 	return nil
+}
+
+func (d *DynamoProcessedOrderRepository) GetLatestByOrderId(ctx context.Context, orderId string) (*data.ProcessedOrder, error) {
+	paginator := dynamodb.NewQueryPaginator(d.client, &dynamodb.QueryInput{
+		TableName:              aws.String(d.tableName),
+		KeyConditionExpression: aws.String("OrderId = :oid"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":oid": &types.AttributeValueMemberS{Value: orderId},
+		},
+	})
+
+	var latest *data.ProcessedOrder
+	for paginator.HasMorePages() {
+		reqCtx, cancel := context.WithTimeout(ctx, time.Second*5)
+		out, err := paginator.NextPage(reqCtx)
+		cancel()
+		if err != nil {
+			return nil, err
+		}
+
+		var page []data.ProcessedOrder
+		if err := attributevalue.UnmarshalListOfMapsWithOptions(out.Items, &page, func(o *attributevalue.DecoderOptions) {
+			o.UseEncodingUnmarshalers = true
+		}); err != nil {
+			return nil, err
+		}
+
+		for i := range page {
+			if latest == nil || page[i].Timestamp.After(latest.Timestamp) {
+				latest = &page[i]
+			}
+		}
+	}
+
+	return latest, nil // nil se o pedido ainda não tem registros processados
 }
