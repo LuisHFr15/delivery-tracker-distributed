@@ -10,7 +10,8 @@ import (
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/services"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/dynamo"
-	infrastructure "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/queue"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/messaging"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/messaging/ports"
 )
 
 func main() {
@@ -19,12 +20,14 @@ func main() {
 
 	auditingRepo := dynamo.NewDynamoAuditingEventRepository(ctx)
 	processedRepo := dynamo.NewDynamoProcessedOrderRepository(ctx)
-	orderTopicReader := infrastructure.NewKafkaReadOrderTopic()
-	locationTopicReader := infrastructure.NewKafkaReadLocationTopic()
-	notificationWriter := infrastructure.NewKafkaWriteNotification()
+	orderRepo := dynamo.NewDynamoOrderRepository(ctx)
+	var orderTopicReader ports.OrderReader = messaging.NewKafkaReadOrderTopic()
+	var locationTopicReader ports.LocationReader = messaging.NewKafkaReadLocationTopic()
+	var notificationWriter ports.NotificationWriter = messaging.NewKafkaWriteNotification()
 
 	go auditingRepo.RunWorker()
 	go processedRepo.RunWorker()
+	go orderRepo.RunWorker()
 	go notificationWriter.RunWorker()
 
 	var readersWg sync.WaitGroup
@@ -44,7 +47,7 @@ func main() {
 				continue
 			}
 
-			orderService := services.NewOrderEventService(cls, auditingRepo)
+			orderService := services.NewOrderEventService(cls, auditingRepo, orderRepo)
 			orderService.ConvertEvent()
 		}
 	}()
@@ -62,7 +65,10 @@ func main() {
 				log.Printf("Failed to read location topic: %v", err)
 				continue
 			}
-			log.Printf("Read location topic %v", cls)
+			locationService := services.NewLocationEventService(cls, auditingRepo, processedRepo, orderRepo, notificationWriter)
+			if err := locationService.ProcessEvent(); err != nil {
+				log.Printf("Failed to process location event: %v", err)
+			}
 		}
 	}()
 
@@ -98,9 +104,10 @@ func main() {
 		}()
 	}
 
-	go shutdownOutput("Processed Order Repo", processedRepo.StopWorker)
-	go shutdownOutput("Auditing Repo", auditingRepo.StopWorker)
-	go shutdownOutput("Kafka Writer", notificationWriter.StopWorker)
+	shutdownOutput("Processed Order Repo", processedRepo.StopWorker)
+	shutdownOutput("Order Repo", orderRepo.StopWorker)
+	shutdownOutput("Auditing Repo", auditingRepo.StopWorker)
+	shutdownOutput("Kafka Writer", notificationWriter.StopWorker)
 
 	shutdownComplete := make(chan struct{})
 	go func() {
