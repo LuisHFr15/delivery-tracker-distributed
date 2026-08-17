@@ -1,8 +1,8 @@
 package order
 
 type Location struct {
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"lng"`
+	Lat float64 `json:"lat" dynamodbav:"Lat"`
+	Lng float64 `json:"lng" dynamodbav:"Lng"`
 }
 
 func (l *Location) SameLocation(loc Location) bool {

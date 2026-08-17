@@ -5,7 +5,7 @@ import (
 )
 
 type Product struct {
-	Id           uuid.UUID `json:"product_id"`
-	Name         string    `json:"name"`
-	ProductPrice int32     `json:"product_price"`
+	Id           uuid.UUID `json:"product_id" dynamodbav:"Id"`
+	Name         string    `json:"name" dynamodbav:"Name"`
+	ProductPrice int32     `json:"product_price" dynamodbav:"ProductPrice"`
 }

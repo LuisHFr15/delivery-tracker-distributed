@@ -19,8 +19,8 @@ var (
 )
 
 type OrderItem struct {
-	Product  Product `json:"product"`
-	Quantity int32   `json:"quantity"`
+	Product  Product `json:"product" dynamodbav:"Product"`
+	Quantity int32   `json:"quantity" dynamodbav:"Quantity"`
 }
 
 type Order struct {
@@ -67,6 +67,19 @@ func (o *Order) UpdateOrderStatus(eventId uuid.UUID, status string) error {
 	}
 	o.Status = trimString
 	return nil
+}
+
+func (o *Order) StartDelivering(eventId uuid.UUID) error {
+	if o.isDelivered() {
+		return fmt.Errorf("%w: event %s tried to start delivering an already delivered order %s", ErrInvalidOperation, eventId, o.Id)
+	}
+	if o.isCanceled() {
+		return fmt.Errorf("%w: event %s tried to start delivering a canceled order %s", ErrInvalidOperation, eventId, o.Id)
+	}
+	if o.Status == "DELIVERING" {
+		return nil
+	}
+	return o.UpdateOrderStatus(eventId, "DELIVERING")
 }
 
 func (o *Order) CancelOrder() {

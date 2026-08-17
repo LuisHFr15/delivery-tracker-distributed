@@ -8,12 +8,12 @@ import (
 )
 
 type ProcessedOrder struct {
-	OrderId           uuid.UUID       `dynamo:"OrderId"`
-	EventId           uuid.UUID       `dynamo:"EventId"`
-	ClientId          uuid.UUID       `dynamo:"ClientId"`
-	OrderStatus       string          `dynamo:"OrderStatus"`
-	Products          []order.Product `dynamo:"Products"`
-	TimestampLocation order.Location  `dynamo:"TimestampLocation"`
-	FinalLocation     order.Location  `dynamo:"FinalLocation"`
-	Timestamp         time.Time       `dynamo:"Timestamp"`
+	OrderId           uuid.UUID       `dynamodbav:"OrderId"`
+	EventId           uuid.UUID       `dynamodbav:"EventId"`
+	ClientId          uuid.UUID       `dynamodbav:"ClientId"`
+	OrderStatus       string          `dynamodbav:"OrderStatus"`
+	Products          []order.Product `dynamodbav:"Products"`
+	TimestampLocation order.Location  `dynamodbav:"TimestampLocation"`
+	FinalLocation     order.Location  `dynamodbav:"FinalLocation"`
+	Timestamp         time.Time       `dynamodbav:"Timestamp"`
 }
