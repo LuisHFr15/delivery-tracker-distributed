@@ -7,14 +7,14 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 )
 
-type ConvertOrderEvent struct {
+type OrderEventConverter struct {
 }
 
-func NewConvertOrderEvent() ConvertOrderEvent {
-	return ConvertOrderEvent{}
+func NewOrderEventConverter() OrderEventConverter {
+	return OrderEventConverter{}
 }
 
-func (ee ConvertOrderEvent) Convert(dto dtos.OrderEventDTO) data.DynamoEvent {
+func (ee OrderEventConverter) Convert(dto dtos.OrderEventDTO) data.DynamoEvent {
 	return data.DynamoEvent{
 		EventType: "order_event",
 		Id:        dto.EventID,
