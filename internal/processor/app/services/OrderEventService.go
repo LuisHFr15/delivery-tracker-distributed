@@ -9,14 +9,16 @@ import (
 type OrderEventService struct {
 	dto       dtos.OrderEventDTO
 	auditRepo repo.AuditingEventRepository
-	converter services.ConvertOrderEvent
+	orderRepo repo.OrderRepository
+	converter services.OrderEventConverter
 }
 
-func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRepository) OrderEventService {
+func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRepository, orderRepo repo.OrderRepository) OrderEventService {
 	return OrderEventService{
 		dto:       dto,
 		auditRepo: auditRepo,
-		converter: services.NewConvertOrderEvent(),
+		orderRepo: orderRepo,
+		converter: services.NewOrderEventConverter(),
 	}
 }
 
@@ -25,4 +27,6 @@ func (ee OrderEventService) ConvertEvent() {
 	originalEvent := ee.dto
 	convertedEvent := converter.Convert(originalEvent)
 	ee.auditRepo.Add(convertedEvent)
+
+	ee.orderRepo.Add(ee.dto.ToDomain())
 }
