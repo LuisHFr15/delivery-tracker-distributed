@@ -1,4 +1,4 @@
-package infrastructure
+package messaging
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func NewKafkaReadOrderTopic() *KafkaReadOrderTopic {
 	return &KafkaReadOrderTopic{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:        []string{broker},
-			Topic:          "location-events",
+			Topic:          "order-events",
 			CommitInterval: time.Second * 2,
 		}),
 	}
