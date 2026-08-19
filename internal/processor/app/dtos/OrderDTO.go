@@ -11,21 +11,26 @@ type OrderDTO struct {
 	ClientID    uuid.UUID      `json:"client_id"`
 	Products    []OrderItemDTO `json:"products"`
 	DeliveryID  *uuid.UUID     `json:"delivery_id,omitempty"`
-	Destination order.Location `json:"location"`
-	Status      string         `json:"status"`
+	Destination *order.Location `json:"location"`
+	Status      string          `json:"status"`
 }
 
-func (d *OrderDTO) ToDomain() order.Order {
-	order := order.Order{
-		Id:         d.ID,
-		Client:     order.Client{Id: d.ClientID},
-		DeliveryId: d.DeliveryID,
-		Status:     d.Status,
+func (d *OrderDTO) ToDomain() (order.Order, error) {
+	if d.Destination == nil {
+		return order.Order{}, order.ErrMissingDestination
+	}
+
+	ord := order.Order{
+		Id:          d.ID,
+		Client:      order.Client{Id: d.ClientID},
+		DeliveryId:  d.DeliveryID,
+		Destination: d.Destination,
+		Status:      d.Status,
 	}
 
 	for _, p := range d.Products {
-		order.Products = append(order.Products, p.ToDomain())
+		ord.Products = append(ord.Products, p.ToDomain())
 	}
 
-	return order
+	return ord, nil
 }

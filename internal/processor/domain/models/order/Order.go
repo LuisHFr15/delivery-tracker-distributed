@@ -16,6 +16,7 @@ var (
 	ErrInvalidStatus            = errors.New("invalid status: cannot be empty")
 	ErrMissingCrucialData       = errors.New("missing data required")
 	ErrInvalidOperation         = errors.New("this operation can't be performed to this order")
+	ErrMissingDestination       = errors.New("order has no destination set")
 )
 
 type OrderItem struct {
@@ -28,7 +29,7 @@ type Order struct {
 	Id          uuid.UUID
 	Products    []OrderItem
 	Client      Client
-	Destination Location
+	Destination *Location
 	DeliveryId  *uuid.UUID
 	Status      string
 	CreatedAt   time.Time
@@ -71,10 +72,10 @@ func (o *Order) UpdateOrderStatus(eventId uuid.UUID, status string) error {
 
 func (o *Order) StartDelivering(eventId uuid.UUID) error {
 	if o.isDelivered() {
-		return fmt.Errorf("%w: event %s tried to start delivering an already delivered order %s", ErrInvalidOperation, eventId, o.Id)
+		return fmt.Errorf("%w: event %s tried to start delivering an already delivered order %s\n", ErrInvalidOperation, eventId, o.Id)
 	}
 	if o.isCanceled() {
-		return fmt.Errorf("%w: event %s tried to start delivering a canceled order %s", ErrInvalidOperation, eventId, o.Id)
+		return fmt.Errorf("%w: event %s tried to start delivering a canceled order %s\n", ErrInvalidOperation, eventId, o.Id)
 	}
 	if o.Status == "DELIVERING" {
 		return nil
@@ -105,6 +106,10 @@ func (o *Order) Deliver(eventId uuid.UUID, actualLocation Location) error {
 	}
 	if o.isCanceled() {
 		return fmt.Errorf("%w: event %s tried to deliver order already canceled", ErrInvalidOperation, eventId)
+	}
+
+	if o.Destination == nil {
+		return fmt.Errorf("%w: event %s tried to deliver order %s", ErrMissingDestination, eventId, o.Id)
 	}
 
 	if !o.Destination.SameLocation(actualLocation) {

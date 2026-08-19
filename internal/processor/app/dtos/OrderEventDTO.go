@@ -15,17 +15,20 @@ type OrderEventDTO struct {
 	Timestamp       time.Time `json:"timestamp,omitempty"`
 }
 
-func (d *OrderEventDTO) ToDomain() order.Order {
-	order := d.Order.ToDomain()
-	order.EventId = d.EventID
-	order.CreatedAt = d.Timestamp
-
-	if order.EventId == uuid.Nil {
-		order.EventId = uuid.New()
+func (d *OrderEventDTO) ToDomain() (order.Order, error) {
+	ord, err := d.Order.ToDomain()
+	if err != nil {
+		return order.Order{}, err
 	}
-	if order.CreatedAt.IsZero() {
-		order.CreatedAt = time.Now()
+	ord.EventId = d.EventID
+	ord.CreatedAt = d.Timestamp
+
+	if ord.EventId == uuid.Nil {
+		ord.EventId = uuid.New()
+	}
+	if ord.CreatedAt.IsZero() {
+		ord.CreatedAt = time.Now()
 	}
 
-	return order
+	return ord, nil
 }

@@ -48,7 +48,9 @@ func main() {
 			}
 
 			orderService := services.NewOrderEventService(cls, auditingRepo, orderRepo)
-			orderService.ConvertEvent()
+			if err := orderService.ConvertEvent(); err != nil {
+				log.Printf("Failed to convert order event: %v", err)
+			}
 		}
 	}()
 

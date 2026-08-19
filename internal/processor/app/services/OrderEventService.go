@@ -22,11 +22,16 @@ func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRe
 	}
 }
 
-func (ee OrderEventService) ConvertEvent() {
+func (ee OrderEventService) ConvertEvent() error {
 	converter := ee.converter
 	originalEvent := ee.dto
 	convertedEvent := converter.Convert(originalEvent)
 	ee.auditRepo.Add(convertedEvent)
 
-	ee.orderRepo.Add(ee.dto.ToDomain())
+	ord, err := ee.dto.ToDomain()
+	if err != nil {
+		return err
+	}
+	ee.orderRepo.Add(ord)
+	return nil
 }

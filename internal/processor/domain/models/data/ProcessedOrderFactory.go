@@ -26,7 +26,7 @@ func (f *ProcessedOrderFactory) CreateProcessedOrder(o order.Order, eventId uuid
 		OrderStatus:       o.Status,
 		Products:          products,
 		TimestampLocation: actualLoc,
-		FinalLocation:     o.Destination,
+		FinalLocation:     *o.Destination,
 		Timestamp:         ts,
 	}
 }

@@ -16,7 +16,7 @@ type LocationEventService struct {
 	dto          dtos.LocationEventDTO
 	lastLocation order.Location
 	calculator   services.DeliveryCalculator
-	checker      services.LocationChecker
+	delUpdater   services.DeliveryUpdater
 	auditRepo    repo.AuditingEventRepository
 	procRepo     repo.ProcessedOrderRepository
 	orderRepo    repo.OrderRepository
@@ -29,7 +29,7 @@ func NewLocationEventService(dto dtos.LocationEventDTO, auditRepo repo.AuditingE
 	return &LocationEventService{
 		dto:        dto,
 		calculator: *services.NewDeliveryCalculator(),
-		checker:    *services.NewLocationChecker(),
+		delUpdater: *services.NewDeliveryUpdater(),
 		auditRepo:  auditRepo,
 		procRepo:   procRepo,
 		orderRepo:  orderRepo,
@@ -61,11 +61,11 @@ func (l *LocationEventService) ProcessEvent() error {
 		return nil
 	}
 
-	if err := ord.StartDelivering(eventId); err != nil {
-		log.Printf("could not start delivering order %s: %s", oId, err)
+	if err := l.delUpdater.ProcessDelivery(ord, actualLoc, eventId); err != nil {
+		log.Printf("could not process delivery for order %s: %s", oId, err)
 		return err
 	}
-	timeToDelivery := l.calculator.CalculateTime(actualLoc, ord.Destination)
+	timeToDelivery := l.calculator.CalculateTime(actualLoc, *ord.Destination)
 
 	event := locConverter.Convert(dto, ord.Status)
 	l.auditRepo.Add(event)
