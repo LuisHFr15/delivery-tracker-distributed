@@ -65,7 +65,11 @@ func (l *LocationEventService) ProcessEvent() error {
 		log.Printf("could not process delivery for order %s: %s", oId, err)
 		return err
 	}
-	timeToDelivery := l.calculator.CalculateTime(actualLoc, *ord.Destination)
+	timeToDelivery, err := l.calculator.CalculateTime(&actualLoc, ord.Destination)
+	if err != nil {
+		log.Printf("could not calculate delivery time for order %s: %s", oId, err)
+		return err
+	}
 
 	event := locConverter.Convert(dto, ord.Status)
 	l.auditRepo.Add(event)
