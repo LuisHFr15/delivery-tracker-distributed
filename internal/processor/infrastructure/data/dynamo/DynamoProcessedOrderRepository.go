@@ -102,5 +102,5 @@ func (d *DynamoProcessedOrderRepository) GetLatestByOrderId(ctx context.Context,
 		}
 	}
 
-	return latest, nil // nil se o pedido ainda não tem registros processados
+	return latest, nil
 }
