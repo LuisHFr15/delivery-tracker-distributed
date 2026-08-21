@@ -5,13 +5,12 @@ import (
 	"fmt"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
-
 	"github.com/google/uuid"
 )
 
 type EventPublisher interface {
-	PublishOrder(ctx context.Context, dto dtos.OrderEventDTO) error
-	PublishLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error
+	PublishOrder(dto dtos.OrderEventDTO)
+	PublishLocation(dto dtos.LocationEventDTO)
 }
 
 type IngesterService struct {
@@ -22,20 +21,22 @@ func NewIngesterService(publisher EventPublisher) *IngesterService {
 	return &IngesterService{publisher: publisher}
 }
 
-func (s *IngesterService) IngestOrder(ctx context.Context, order dtos.OrderEventDTO) error {
+func (s *IngesterService) IngestOrder(_ context.Context, order dtos.OrderEventDTO) error {
 	if order.Order.ID == uuid.Nil {
 		return fmt.Errorf("order id is required to ingest order")
 	}
-	return s.publisher.PublishOrder(ctx, order)
+	s.publisher.PublishOrder(order)
+	return nil
 }
 
-func (s *IngesterService) IngestLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error {
-	if orderId == uuid.Nil {
+func (s *IngesterService) IngestLocation(_ context.Context, dto dtos.LocationEventDTO) error {
+	if dto.OrderID == uuid.Nil {
 		return fmt.Errorf("order id is required to ingest location")
 	}
-	return s.publisher.PublishLocation(ctx, dto, orderId)
+	s.publisher.PublishLocation(dto)
+	return nil
 }
 
-func (s *IngesterService) Health(ctx context.Context) error {
+func (s *IngesterService) Health(_ context.Context) error {
 	return nil
 }

@@ -1,4 +1,4 @@
-package infrastructure
+package messaging
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type KafkaReadOrderTopic struct {
 	reader *kafka.Reader
 }
 
-func NewKafkaReadOrderTopic(reader *kafka.Reader) *KafkaReadOrderTopic {
+func NewKafkaReadOrderTopic() *KafkaReadOrderTopic {
 	broker := os.Getenv("KAFKA_BROKER")
 	if broker == "" {
 		broker = "localhost:9092"
@@ -24,7 +24,7 @@ func NewKafkaReadOrderTopic(reader *kafka.Reader) *KafkaReadOrderTopic {
 	return &KafkaReadOrderTopic{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:        []string{broker},
-			Topic:          "location-events",
+			Topic:          "order-events",
 			CommitInterval: time.Second * 2,
 		}),
 	}
@@ -48,4 +48,8 @@ func (k *KafkaReadOrderTopic) Read(ctx context.Context) (dtos.OrderEventDTO, err
 	}
 
 	return dto, nil
+}
+
+func (k *KafkaReadOrderTopic) Close() error {
+	return k.reader.Close()
 }

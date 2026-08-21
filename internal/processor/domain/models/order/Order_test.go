@@ -1,4 +1,4 @@
-package models
+package order
 
 import (
 	"testing"
@@ -153,7 +153,7 @@ func TestOrder_Deliver(t *testing.T) {
 				Id:          uuid.Nil,
 				CreatedAt:   time.Now().Add(-(time.Minute) * 5),
 				Status:      "ONGOING",
-				Destination: Location{Lat: 45, Lng: -45},
+				Destination: &Location{Lat: 45, Lng: -45},
 			},
 		},
 		{
@@ -166,7 +166,7 @@ func TestOrder_Deliver(t *testing.T) {
 				CreatedAt:   time.Now().Add(-(time.Minute) * 5),
 				Status:      "DELIVERED",
 				DeliveredAt: timePtr(time.Now()),
-				Destination: Location{Lat: 45, Lng: -45},
+				Destination: &Location{Lat: 45, Lng: -45},
 			},
 		},
 		{
@@ -179,7 +179,7 @@ func TestOrder_Deliver(t *testing.T) {
 				CreatedAt:   time.Now().Add(-(time.Minute) * 5),
 				Status:      "CANCELLED",
 				CancelledAt: timePtr(time.Now()),
-				Destination: Location{Lat: 45, Lng: -45},
+				Destination: &Location{Lat: 45, Lng: -45},
 			},
 		},
 		{
@@ -191,7 +191,7 @@ func TestOrder_Deliver(t *testing.T) {
 				Id:          uuid.Nil,
 				CreatedAt:   time.Now().Add(-(time.Minute) * 5),
 				Status:      "ONGOING",
-				Destination: Location{Lat: 45, Lng: -45},
+				Destination: &Location{Lat: 45, Lng: -45},
 			},
 		},
 	}

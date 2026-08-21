@@ -21,8 +21,10 @@ import (
 
 func main() {
 	fmt.Println("Ingester starting...")
+	errCh := make(chan error, 1)
 
 	publisher := queues.NewKafkaPublisher()
+	publisher.Start(errCh)
 	service := services.NewIngesterService(publisher)
 	defer publisher.Close()
 
@@ -47,14 +49,22 @@ func main() {
 	/*
 		blocking operation until receive SIGINT or SIGTERM
 	*/
-	<-quit
-	fmt.Println("Shutting down...")
+	select {
+	case <-quit:
+		log.Println("Shutting down gracefully")
+
+	case err := <-errCh:
+		log.Println("Critical error:", err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	publisher.Close()
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("shutdown failed: %v", err)
+	}
+	if err := publisher.Close(); err != nil {
+		log.Fatalf("close publisher failed: %v", err)
 	}
 	fmt.Println("Server stopped cleanly")
 }
