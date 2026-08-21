@@ -17,17 +17,12 @@ type LocationEventDTO struct {
 }
 
 func (d *LocationEventDTO) ToDomain() (uuid.UUID, uuid.UUID, order.Location, time.Time) {
-	eventId := d.EventID
-	if eventId == uuid.Nil {
-		eventId = uuid.New()
-	}
-
 	timestamp := d.Timestamp
 	if timestamp.IsZero() {
 		timestamp = time.Now()
 	}
 
-	return eventId, d.OrderID, order.Location{
+	return d.EventID, d.OrderID, order.Location{
 		Lat: d.Latitude,
 		Lng: d.Longitude,
 	}, timestamp

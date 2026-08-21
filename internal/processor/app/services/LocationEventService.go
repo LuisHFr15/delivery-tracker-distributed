@@ -10,6 +10,8 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
 	repo "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/ports"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/messaging/ports"
+
+	"github.com/google/uuid"
 )
 
 type LocationEventService struct {
@@ -38,6 +40,10 @@ func NewLocationEventService(dto dtos.LocationEventDTO, auditRepo repo.AuditingE
 }
 
 func (l *LocationEventService) ProcessEvent() error {
+	if l.dto.EventID == uuid.Nil {
+		return ErrMissingEventID
+	}
+
 	locConverter := services.NewLocationEventConverter()
 	factory := data.NewProcessedOrderFactory()
 
