@@ -4,6 +4,8 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
 	repo "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/ports"
+
+	"github.com/google/uuid"
 )
 
 type OrderEventService struct {
@@ -27,6 +29,10 @@ func (ee OrderEventService) ConvertEvent() error {
 	originalEvent := ee.dto
 	convertedEvent := converter.Convert(originalEvent)
 	ee.auditRepo.Add(convertedEvent)
+
+	if ee.dto.EventID == uuid.Nil {
+		return ErrMissingEventID
+	}
 
 	ord, err := ee.dto.ToDomain()
 	if err != nil {

@@ -23,9 +23,6 @@ func (d *OrderEventDTO) ToDomain() (order.Order, error) {
 	ord.EventId = d.EventID
 	ord.CreatedAt = d.Timestamp
 
-	if ord.EventId == uuid.Nil {
-		ord.EventId = uuid.New()
-	}
 	if ord.CreatedAt.IsZero() {
 		ord.CreatedAt = time.Now()
 	}
