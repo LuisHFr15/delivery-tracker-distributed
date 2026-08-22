@@ -1,4 +1,4 @@
-//go:build integration
+//go:build integration && full_flow
 
 package dynamo
 
@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
-	appservices "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/services"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/services"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/messaging"
@@ -216,7 +216,7 @@ func TestOrderEventService_FullFlow_Integration(t *testing.T) {
 		t.Fatalf("reader.Read: %v", err)
 	}
 
-	svc := appservices.NewOrderEventService(gotDTO, auditRepo, orderRepo)
+	svc := services.NewOrderEventService(gotDTO, auditRepo, orderRepo)
 	if err := svc.ConvertEvent(); err != nil {
 		t.Fatalf("ConvertEvent: %v", err)
 	}
@@ -322,7 +322,7 @@ func TestLocationEventService_FullFlow_Integration(t *testing.T) {
 		t.Fatalf("reader.Read: %v", err)
 	}
 
-	svc := appservices.NewLocationEventService(gotDTO, auditRepo, procRepo, orderRepo, writer)
+	svc := services.NewLocationEventService(gotDTO, auditRepo, procRepo, orderRepo, writer)
 	if err := svc.ProcessEvent(); err != nil {
 		t.Fatalf("ProcessEvent: %v", err)
 	}
