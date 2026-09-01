@@ -28,12 +28,16 @@ func (f *FakeIngesterService) IngestOrder(ctx context.Context, order dtos.OrderE
 	return nil
 }
 
-func (f *FakeIngesterService) IngestLocation(ctx context.Context, dto dtos.LocationEventDTO, orderId uuid.UUID) error {
+func (f *FakeIngesterService) IngestLocation(ctx context.Context, dto dtos.LocationEventDTO) error {
 	if f.errToReturn != nil {
 		return f.errToReturn
 	}
 	f.IngestedLocations = append(f.IngestedLocations, dto)
 	return nil
+}
+
+func (f *FakeIngesterService) Health(ctx context.Context) error {
+	return f.errToReturn
 }
 
 func TestIngesterHandler_TrackOrder(t *testing.T) {
@@ -121,12 +125,6 @@ func TestIngesterHandler_UpdateLocation(t *testing.T) {
 				Longitude: -46.6333,
 			},
 			expectedCode: http.StatusAccepted,
-		},
-		{
-			name:         "invalid order id format",
-			orderIDPath:  "invalid-uuid",
-			payload:      dtos.LocationEventDTO{},
-			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:         "invalid json body",

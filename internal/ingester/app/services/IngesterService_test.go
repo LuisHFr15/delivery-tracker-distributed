@@ -2,8 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
-	"log"
 	"testing"
 
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
@@ -14,32 +12,22 @@ import (
 type FakePublisher struct {
 	OrdersSent    []dtos.OrderEventDTO
 	LocationsSent []dtos.LocationEventDTO
-	ErrToReturn   error
 }
 
-func (p *FakePublisher) PublishOrder(_ context.Context, dto dtos.OrderEventDTO) error {
-	if p.ErrToReturn != nil {
-		return p.ErrToReturn
-	}
+func (p *FakePublisher) PublishOrder(dto dtos.OrderEventDTO) {
 	p.OrdersSent = append(p.OrdersSent, dto)
-	return nil
 }
 
-func (p *FakePublisher) PublishLocation(_ context.Context, dto dtos.LocationEventDTO, _ uuid.UUID) error {
-	if p.ErrToReturn != nil {
-		return p.ErrToReturn
-	}
+func (p *FakePublisher) PublishLocation(dto dtos.LocationEventDTO) {
 	p.LocationsSent = append(p.LocationsSent, dto)
-	return nil
 }
 
 func TestIngesterService_IngestOrder(t *testing.T) {
 	tests := []struct {
-		name       string
-		order      dtos.OrderEventDTO
-		publishErr error
-		wantErr    bool
-		wantSent   int
+		name     string
+		order    dtos.OrderEventDTO
+		wantErr  bool
+		wantSent int
 	}{
 		{
 			name:     "valid order is published",
@@ -53,19 +41,11 @@ func TestIngesterService_IngestOrder(t *testing.T) {
 			wantErr:  true,
 			wantSent: 0,
 		},
-		{
-			name:       "publisher error is propagated",
-			order:      dtos.OrderEventDTO{Order: dtos.OrderDTO{ID: uuid.New()}},
-			publishErr: errors.New("broker down"),
-			wantErr:    true,
-			wantSent:   0,
-		},
 	}
 
-	log.Println("Testing OrderIngest")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fake := &FakePublisher{ErrToReturn: tt.publishErr}
+			fake := &FakePublisher{}
 			service := NewIngesterService(fake)
 
 			err := service.IngestOrder(context.Background(), tt.order)
@@ -76,21 +56,16 @@ func TestIngesterService_IngestOrder(t *testing.T) {
 			if len(fake.OrdersSent) != tt.wantSent {
 				t.Errorf("orders sent = %d, want %d", len(fake.OrdersSent), tt.wantSent)
 			}
-
-			log.Println(tt.name, tt.order.Order.ID)
-			log.Println("Need err?", tt.wantErr)
-			log.Println(fake.OrdersSent)
 		})
 	}
 }
 
 func TestIngesterService_IngestLocation(t *testing.T) {
 	tests := []struct {
-		name       string
-		orderId    uuid.UUID
-		publishErr error
-		wantErr    bool
-		wantSent   int
+		name     string
+		orderId  uuid.UUID
+		wantErr  bool
+		wantSent int
 	}{
 		{
 			name:     "valid location is published",
@@ -104,22 +79,14 @@ func TestIngesterService_IngestLocation(t *testing.T) {
 			wantErr:  true,
 			wantSent: 0,
 		},
-		{
-			name:       "publisher error is propagated",
-			orderId:    uuid.New(),
-			publishErr: errors.New("broker down"),
-			wantErr:    true,
-			wantSent:   0,
-		},
 	}
 
-	log.Println("Testing LocationIngest")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fake := &FakePublisher{ErrToReturn: tt.publishErr}
+			fake := &FakePublisher{}
 			service := NewIngesterService(fake)
 
-			err := service.IngestLocation(context.Background(), dtos.LocationEventDTO{}, tt.orderId)
+			err := service.IngestLocation(context.Background(), dtos.LocationEventDTO{OrderID: tt.orderId})
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IngestLocation() error = %v, wantErr %v", err, tt.wantErr)
@@ -127,9 +94,6 @@ func TestIngesterService_IngestLocation(t *testing.T) {
 			if len(fake.LocationsSent) != tt.wantSent {
 				t.Errorf("locations sent = %d, want %d", len(fake.LocationsSent), tt.wantSent)
 			}
-			log.Println(tt.name, tt.orderId)
-			log.Println("Need err?", tt.wantErr)
-			log.Println(fake.LocationsSent)
 		})
 	}
 }
