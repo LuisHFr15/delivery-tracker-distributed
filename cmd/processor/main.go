@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -15,6 +16,16 @@ import (
 )
 
 func main() {
+	if os.Getenv("APP_RUNTIME") == "lambda" {
+		runLambda()
+		return
+	}
+	runServer()
+}
+
+// runServer is the local, long-running mode: consume Kafka topics, run the repo
+// workers, and tear everything down gracefully on SIGINT/SIGTERM.
+func runServer() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
