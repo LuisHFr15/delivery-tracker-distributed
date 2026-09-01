@@ -175,4 +175,4 @@ Both return `202 Accepted` (fire-and-forget). `GET $API/api/health` returns `200
 
 This is an MVP focused on the event pipeline and a real, no-cost AWS deployment. The original
 project brief also called for full observability (OpenTelemetry/Prometheus/Jaeger), PostgreSQL +
-migrations, and DLQ/retry — deliberately out of scope here and tracked for a later iteration.
+migrations, and DLQ/retry.
