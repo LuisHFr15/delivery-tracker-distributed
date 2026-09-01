@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"net/http"
 
 	infrahttp "github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/infrastructure/http"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/infrastructure/queues"
@@ -20,19 +19,27 @@ import (
 )
 
 func main() {
+	if os.Getenv("APP_RUNTIME") == "lambda" {
+		runLambda()
+		return
+	}
+	runServer()
+}
+
+// runServer is the local, long-running mode: an HTTP server publishing to Kafka,
+// with a graceful shutdown on SIGINT/SIGTERM.
+func runServer() {
 	fmt.Println("Ingester starting...")
 	errCh := make(chan error, 1)
 
 	publisher := queues.NewKafkaPublisher()
 	publisher.Start(errCh)
 	service := services.NewIngesterService(publisher)
-	defer publisher.Close()
 
 	handler := infrahttp.NewIngesterHandler(service)
 
 	r := gin.Default()
 	api := r.Group("/api")
-
 	infrahttp.RegisterIngesterRoutes(api, handler)
 
 	fmt.Println("Ingester server running on :8080")
@@ -46,13 +53,9 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	/*
-		blocking operation until receive SIGINT or SIGTERM
-	*/
 	select {
 	case <-quit:
 		log.Println("Shutting down gracefully")
-
 	case err := <-errCh:
 		log.Println("Critical error:", err)
 	}
