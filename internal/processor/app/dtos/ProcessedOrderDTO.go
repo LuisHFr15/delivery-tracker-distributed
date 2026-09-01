@@ -11,6 +11,7 @@ import (
 type ProcessedOrderDTO struct {
 	OrderId          uuid.UUID      `json:"orderId"`
 	ClientId         uuid.UUID      `json:"clientId"`
+	OrderStatus      string         `json:"orderStatus"`
 	TimeToDelivery   time.Duration  `json:"timeToDelivery"`
 	Timestamp        time.Time      `json:"timestamp"`
 	ActualLocation   order.Location `json:"actualLocation"`
@@ -21,6 +22,7 @@ func FromDomain(p data.ProcessedOrder, ttd time.Duration) ProcessedOrderDTO {
 	return ProcessedOrderDTO{
 		OrderId:          p.OrderId,
 		ClientId:         p.ClientId,
+		OrderStatus:      p.OrderStatus,
 		TimeToDelivery:   ttd,
 		Timestamp:        p.Timestamp,
 		ActualLocation:   p.TimestampLocation,
