@@ -1,0 +1,188 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Delivery Tracker — serverless event pipeline.
+  API Gateway -> ingester -> SNS (order/location events) -> processor -> DynamoDB
+  and SNS (processed-orders) -> notifier -> DynamoDB. All resources are on-demand
+  and fit within the AWS Free Tier.
+
+Globals:
+  Function:
+    Runtime: provided.al2023
+    Architectures:
+      - arm64
+    Timeout: 15
+    MemorySize: 128
+    Environment:
+      Variables:
+        APP_RUNTIME: lambda
+
+Resources:
+  # -------------------------------------------------------------------------
+  # Messaging (SNS topics)
+  # -------------------------------------------------------------------------
+  OrderEventsTopic:
+    Type: AWS::SNS::Topic
+  LocationEventsTopic:
+    Type: AWS::SNS::Topic
+  ProcessedOrdersTopic:
+    Type: AWS::SNS::Topic
+
+  # -------------------------------------------------------------------------
+  # Persistence (DynamoDB, on-demand)
+  # -------------------------------------------------------------------------
+  AuditingTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: EventType
+          AttributeType: S
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: EventType
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+
+  OrderTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: OrderId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: OrderId
+          KeyType: HASH
+
+  ProcessedOrderTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: OrderId
+          AttributeType: S
+        - AttributeName: Timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: OrderId
+          KeyType: HASH
+        - AttributeName: Timestamp
+          KeyType: RANGE
+
+  NotifiedMessagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: OrderId
+          AttributeType: S
+        - AttributeName: Timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: OrderId
+          KeyType: HASH
+        - AttributeName: Timestamp
+          KeyType: RANGE
+
+  # -------------------------------------------------------------------------
+  # Functions
+  # -------------------------------------------------------------------------
+  IngesterFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: .
+      Handler: bootstrap
+      Environment:
+        Variables:
+          SNS_ORDER_TOPIC_ARN: !Ref OrderEventsTopic
+          SNS_LOCATION_TOPIC_ARN: !Ref LocationEventsTopic
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt OrderEventsTopic.TopicName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt LocationEventsTopic.TopicName
+      Events:
+        Order:
+          Type: HttpApi
+          Properties:
+            Path: /api/order
+            Method: POST
+        Location:
+          Type: HttpApi
+          Properties:
+            Path: /api/order/{id}/location
+            Method: POST
+        Health:
+          Type: HttpApi
+          Properties:
+            Path: /api/health
+            Method: GET
+
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: .
+      Handler: bootstrap
+      Environment:
+        Variables:
+          DYNAMODB_AUDITING_TABLE_NAME: !Ref AuditingTable
+          DYNAMODB_ORDER_TABLE_NAME: !Ref OrderTable
+          DYNAMODB_PROCESSED_ORDER_TABLE_NAME: !Ref ProcessedOrderTable
+          SNS_ORDER_TOPIC_ARN: !Ref OrderEventsTopic
+          SNS_LOCATION_TOPIC_ARN: !Ref LocationEventsTopic
+          SNS_PROCESSED_ORDERS_TOPIC_ARN: !Ref ProcessedOrdersTopic
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref AuditingTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrderTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProcessedOrderTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt ProcessedOrdersTopic.TopicName
+      Events:
+        OrderEvents:
+          Type: SNS
+          Properties:
+            Topic: !Ref OrderEventsTopic
+        LocationEvents:
+          Type: SNS
+          Properties:
+            Topic: !Ref LocationEventsTopic
+
+  NotifierFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: .
+      Handler: bootstrap
+      Environment:
+        Variables:
+          DYNAMODB_NOTIFIED_MESSAGES_TABLE_NAME: !Ref NotifiedMessagesTable
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref NotifiedMessagesTable
+      Events:
+        ProcessedOrders:
+          Type: SNS
+          Properties:
+            Topic: !Ref ProcessedOrdersTopic
+
+Outputs:
+  ApiEndpoint:
+    Description: Base URL of the ingester HTTP API
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  OrderEventsTopicArn:
+    Value: !Ref OrderEventsTopic
+  LocationEventsTopicArn:
+    Value: !Ref LocationEventsTopic
+  ProcessedOrdersTopicArn:
+    Value: !Ref ProcessedOrdersTopic
