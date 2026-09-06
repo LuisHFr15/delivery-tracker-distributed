@@ -10,7 +10,7 @@ Globals:
   Function:
     Runtime: provided.al2023
     Architectures:
-      - arm64
+      - x86_64
     Timeout: 15
     MemorySize: 128
     Environment:
