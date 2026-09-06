@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -34,22 +33,20 @@ func NewAPIGatewayHandler(service *services.IngesterService) func(context.Contex
 	return func(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 		method := req.RequestContext.HTTP.Method
 		path := req.RequestContext.HTTP.Path
-		log.Println(method, path)
 
 		switch {
 		case method == http.MethodGet && path == "/health":
 			return respond(http.StatusOK, `{"status":"ok"}`), nil
 
 		case method == http.MethodPost && path == "/order":
-			log.Println(req.Body)
 			var dto dtos.OrderEventDTO
 			if err := json.Unmarshal([]byte(req.Body), &dto); err != nil {
-				return respond(http.StatusBadRequest, errorBody(fmt.Errorf(`{"error":"invalid request format", "description": %w}`, err))), nil
+				return respond(http.StatusBadRequest, errorBody(err)), nil
 			}
 			if err := service.IngestOrder(ctx, dto); err != nil {
 				return respond(http.StatusInternalServerError, errorBody(err)), nil
 			}
-			return respond(http.StatusAccepted, ""), nil
+			return respond(http.StatusAccepted, `{"message": "order being processed"}`), nil
 
 		case method == http.MethodPost && strings.HasPrefix(path, "/order/") && strings.HasSuffix(path, "/location"):
 			var dto dtos.LocationEventDTO
@@ -59,7 +56,7 @@ func NewAPIGatewayHandler(service *services.IngesterService) func(context.Contex
 			if err := service.IngestLocation(ctx, dto); err != nil {
 				return respond(http.StatusInternalServerError, errorBody(err)), nil
 			}
-			return respond(http.StatusAccepted, ""), nil
+			return respond(http.StatusAccepted, `{"message": "location update being processed"}`), nil
 
 		default:
 			return respond(http.StatusNotFound, `{"error":"route not found"}`), nil
