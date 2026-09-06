@@ -2,7 +2,7 @@ package services
 
 import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
-	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services/convertion"
 	repo "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/ports"
 
 	"github.com/google/uuid"
@@ -12,7 +12,7 @@ type OrderEventService struct {
 	dto       dtos.OrderEventDTO
 	auditRepo repo.AuditingEventRepository
 	orderRepo repo.OrderRepository
-	converter services.OrderEventConverter
+	converter convertion.OrderEventConverter
 }
 
 func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRepository, orderRepo repo.OrderRepository) OrderEventService {
@@ -20,7 +20,7 @@ func NewOrderEventService(dto dtos.OrderEventDTO, auditRepo repo.AuditingEventRe
 		dto:       dto,
 		auditRepo: auditRepo,
 		orderRepo: orderRepo,
-		converter: services.NewOrderEventConverter(),
+		converter: convertion.NewOrderEventConverter(),
 	}
 }
 

@@ -8,10 +8,10 @@ import (
 )
 
 type DynamoEvent struct {
-	EventType string         `dynamodbav:"EventType"`
-	Id        uuid.UUID      `dynamodbav:"Id"`
-	OrderId   uuid.UUID      `dynamodbav:"OrderId"`
-	Status    string         `dynamodbav:"Status"`
-	Location  order.Location `dynamodbav:"Location"`
-	Timestamp time.Time      `dynamodbav:"Timestamp"`
+	TransactionType string         `dynamodbav:"TransactionType"`
+	Id              uuid.UUID      `dynamodbav:"Id"`
+	OrderId         uuid.UUID      `dynamodbav:"OrderId"`
+	Status          string         `dynamodbav:"Status"`
+	Location        order.Location `dynamodbav:"Location"`
+	Timestamp       time.Time      `dynamodbav:"Timestamp"`
 }

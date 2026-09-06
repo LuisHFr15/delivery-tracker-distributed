@@ -14,10 +14,10 @@ import (
 )
 
 type DynamoNotifiedMessageRepository struct {
-	tableName string
-	client    *dynamodb.Client
-	buffer    chan *data.NotifiedMessage
-	done      chan struct{}
+	tableArn string
+	client   *dynamodb.Client
+	buffer   chan *data.NotifiedMessage
+	done     chan struct{}
 }
 
 func NewDynamoNotifiedMessageRepository(ctx context.Context) *DynamoNotifiedMessageRepository {
@@ -25,11 +25,15 @@ func NewDynamoNotifiedMessageRepository(ctx context.Context) *DynamoNotifiedMess
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
+	tableArn := os.Getenv("DYNAMODB_NOTIFIED_MESSAGES_TABLE_ARN")
+	if tableArn == "" {
+		tableArn = os.Getenv("DYNAMODB_NOTIFIED_MESSAGES_TABLE_NAME")
+	}
 	return &DynamoNotifiedMessageRepository{
-		tableName: os.Getenv("DYNAMODB_NOTIFIED_MESSAGES_TABLE_NAME"),
-		client:    dynamodb.NewFromConfig(cfg),
-		buffer:    make(chan *data.NotifiedMessage),
-		done:      make(chan struct{}),
+		tableArn: tableArn,
+		client:   dynamodb.NewFromConfig(cfg),
+		buffer:   make(chan *data.NotifiedMessage),
+		done:     make(chan struct{}),
 	}
 }
 
@@ -50,7 +54,7 @@ func (d *DynamoNotifiedMessageRepository) RunWorker() {
 
 		reqCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		_, err = d.client.PutItem(reqCtx, &dynamodb.PutItemInput{
-			TableName: aws.String(d.tableName),
+			TableName: aws.String(d.tableArn),
 			Item:      item,
 		})
 		cancel()

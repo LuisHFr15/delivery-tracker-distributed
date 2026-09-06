@@ -25,7 +25,7 @@ func (s *IngesterService) IngestOrder(_ context.Context, order dtos.OrderEventDT
 	if order.Order.ID == uuid.Nil {
 		return fmt.Errorf("order id is required to ingest order")
 	}
-	go s.publisher.PublishOrder(order)
+	s.publisher.PublishOrder(order)
 	return nil
 }
 
@@ -33,7 +33,7 @@ func (s *IngesterService) IngestLocation(_ context.Context, dto dtos.LocationEve
 	if dto.OrderID == uuid.Nil {
 		return fmt.Errorf("order id is required to ingest location")
 	}
-	go s.publisher.PublishLocation(dto)
+	s.publisher.PublishLocation(dto)
 	return nil
 }
 

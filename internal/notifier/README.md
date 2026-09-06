@@ -34,5 +34,5 @@ repo before returning.
 | Variable | Mode | Purpose |
 |---|---|---|
 | `KAFKA_BROKER` | local | Kafka bootstrap address |
-| `DYNAMODB_NOTIFIED_MESSAGES_TABLE_NAME` | both | notifications table |
+| `DYNAMODB_NOTIFIED_MESSAGES_TABLE_ARN` | both | notifications table ARN (or name) |
 | `APP_RUNTIME` | both | `local` (default) or `lambda` |

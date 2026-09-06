@@ -1,4 +1,4 @@
-package services
+package convertion
 
 import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
@@ -15,11 +15,11 @@ func NewLocationEventConverter() LocationEventConverter {
 
 func (ee LocationEventConverter) Convert(dto dtos.LocationEventDTO, status string) data.DynamoEvent {
 	return data.DynamoEvent{
-		EventType: "location_event",
-		Id:        dto.EventID,
-		OrderId:   dto.OrderID,
-		Status:    status,
-		Location:  order.Location{Lat: dto.Latitude, Lng: dto.Longitude},
-		Timestamp: dto.Timestamp,
+		TransactionType: "location_event",
+		Id:              dto.EventID,
+		OrderId:         dto.OrderID,
+		Status:          status,
+		Location:        order.Location{Lat: dto.Latitude, Lng: dto.Longitude},
+		Timestamp:       dto.Timestamp,
 	}
 }

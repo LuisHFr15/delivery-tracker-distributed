@@ -58,7 +58,7 @@ func (p *SnsPublisher) publish(topicArn string, payload any, groupKey string) {
 		TopicArn: aws.String(topicArn),
 		Message:  aws.String(string(value)),
 	})
-	log.Printf("published %s to respective topic successfuly", string(value), topicArn)
+	log.Printf("published %s to respective topic %s successfully", string(value), topicArn)
 	if err != nil {
 		log.Printf("failed to publish event for order %s to %s: %v", groupKey, topicArn, err)
 	}

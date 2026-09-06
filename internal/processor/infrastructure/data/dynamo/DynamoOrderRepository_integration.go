@@ -16,10 +16,10 @@ import (
 )
 
 type DynamoOrderRepository struct {
-	tableName string
-	client    *dynamodb.Client
-	buffer    chan *order.Order
-	done      chan struct{}
+	tableArn string
+	client   *dynamodb.Client
+	buffer   chan *order.Order
+	done     chan struct{}
 }
 
 func NewDynamoOrderRepository(ctx context.Context) *DynamoOrderRepository {
@@ -27,11 +27,15 @@ func NewDynamoOrderRepository(ctx context.Context) *DynamoOrderRepository {
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
+	tableArn := os.Getenv("DYNAMODB_ORDER_TABLE_ARN")
+	if tableArn == "" {
+		tableArn = os.Getenv("DYNAMODB_ORDER_TABLE_NAME")
+	}
 	return &DynamoOrderRepository{
-		tableName: os.Getenv("DYNAMODB_ORDER_TABLE_NAME"),
-		client:    dynamodb.NewFromConfig(cfg),
-		buffer:    make(chan *order.Order),
-		done:      make(chan struct{}),
+		tableArn: tableArn,
+		client:   dynamodb.NewFromConfig(cfg),
+		buffer:   make(chan *order.Order),
+		done:     make(chan struct{}),
 	}
 }
 
@@ -55,7 +59,7 @@ func (d *DynamoOrderRepository) RunWorker() {
 		reqCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
 		_, err = d.client.PutItem(reqCtx, &dynamodb.PutItemInput{
-			TableName: aws.String(d.tableName),
+			TableName: aws.String(d.tableArn),
 			Item:      item,
 		})
 
@@ -79,7 +83,7 @@ func (d *DynamoOrderRepository) GetByOrderId(ctx context.Context, orderId string
 	defer cancel()
 
 	out, err := d.client.GetItem(reqCtx, &dynamodb.GetItemInput{
-		TableName: aws.String(d.tableName),
+		TableName: aws.String(d.tableArn),
 		Key: map[string]types.AttributeValue{
 			"OrderId": &types.AttributeValueMemberS{Value: orderId},
 		},

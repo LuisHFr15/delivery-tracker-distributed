@@ -1,4 +1,4 @@
-package services
+package convertion
 
 import (
 	"time"
@@ -22,11 +22,11 @@ func (ee OrderEventConverter) Convert(dto dtos.OrderEventDTO) data.DynamoEvent {
 	}
 
 	return data.DynamoEvent{
-		EventType: "order_event",
-		Id:        dto.EventID,
-		OrderId:   dto.Order.ID,
-		Status:    dto.TransactionType,
-		Location:  location,
-		Timestamp: time.Now(),
+		TransactionType: "order_event",
+		Id:              dto.EventID,
+		OrderId:         dto.Order.ID,
+		Status:          dto.TransactionType,
+		Location:        location,
+		Timestamp:       time.Now(),
 	}
 }

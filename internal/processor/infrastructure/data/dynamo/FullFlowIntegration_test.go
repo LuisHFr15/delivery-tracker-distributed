@@ -74,13 +74,13 @@ func startKafka(t *testing.T, ctx context.Context) string {
 
 // local repository builders — struct literals with the injected local client.
 func newLocalOrderRepo(client *dynamodb.Client, table string) *DynamoOrderRepository {
-	return &DynamoOrderRepository{tableName: table, client: client, buffer: make(chan *order.Order), done: make(chan struct{})}
+	return &DynamoOrderRepository{tableArn: table, client: client, buffer: make(chan *order.Order), done: make(chan struct{})}
 }
 func newLocalAuditRepo(client *dynamodb.Client, table string) *DynamoAuditingEventRepository {
-	return &DynamoAuditingEventRepository{tableName: table, client: client, buffer: make(chan *data.DynamoEvent), done: make(chan struct{})}
+	return &DynamoAuditingEventRepository{tableArn: table, client: client, buffer: make(chan *data.DynamoEvent), done: make(chan struct{})}
 }
 func newLocalProcRepo(client *dynamodb.Client, table string) *DynamoProcessedOrderRepository {
-	return &DynamoProcessedOrderRepository{tableName: table, client: client, buffer: make(chan *data.ProcessedOrder), done: make(chan struct{})}
+	return &DynamoProcessedOrderRepository{tableArn: table, client: client, buffer: make(chan *data.ProcessedOrder), done: make(chan struct{})}
 }
 
 // produceJSON writes a JSON message to a topic, retrying while the topic is

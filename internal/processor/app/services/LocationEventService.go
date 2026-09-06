@@ -8,6 +8,7 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services/convertion"
 	repo "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/data/ports"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/infrastructure/messaging/ports"
 
@@ -44,7 +45,7 @@ func (l *LocationEventService) ProcessEvent() error {
 		return ErrMissingEventID
 	}
 
-	locConverter := services.NewLocationEventConverter()
+	locConverter := convertion.NewLocationEventConverter()
 	factory := data.NewProcessedOrderFactory()
 
 	eventId, _, _, ts := l.dto.ToDomain()

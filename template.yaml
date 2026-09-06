@@ -132,9 +132,9 @@ Resources:
       Handler: bootstrap
       Environment:
         Variables:
-          DYNAMODB_AUDITING_TABLE_NAME: !Ref AuditingTable
-          DYNAMODB_ORDER_TABLE_NAME: !Ref OrderTable
-          DYNAMODB_PROCESSED_ORDER_TABLE_NAME: !Ref ProcessedOrderTable
+          DYNAMODB_AUDITING_TABLE_ARN: !GetAtt AuditingTable.Arn
+          DYNAMODB_ORDER_TABLE_ARN: !GetAtt OrderTable.Arn
+          DYNAMODB_PROCESSED_ORDER_TABLE_ARN: !GetAtt ProcessedOrderTable.Arn
           SNS_ORDER_TOPIC_ARN: !Ref OrderEventsTopic
           SNS_LOCATION_TOPIC_ARN: !Ref LocationEventsTopic
           SNS_PROCESSED_ORDERS_TOPIC_ARN: !Ref ProcessedOrdersTopic
@@ -166,7 +166,7 @@ Resources:
       Handler: bootstrap
       Environment:
         Variables:
-          DYNAMODB_NOTIFIED_MESSAGES_TABLE_NAME: !Ref NotifiedMessagesTable
+          DYNAMODB_NOTIFIED_MESSAGES_TABLE_ARN: !GetAtt NotifiedMessagesTable.Arn
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref NotifiedMessagesTable

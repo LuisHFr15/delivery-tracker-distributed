@@ -11,7 +11,7 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/app/dtos"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
-	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services/convertion"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	credentials2 "github.com/aws/aws-sdk-go-v2/credentials"
@@ -81,8 +81,8 @@ func CreateTable(ctx context.Context, client *dynamodb.Client, tableName string)
 }
 
 func GetEvents() []data.DynamoEvent {
-	ordConverter := services.NewOrderEventConverter()
-	locConverter := services.NewLocationEventConverter()
+	ordConverter := convertion.NewOrderEventConverter()
+	locConverter := convertion.NewLocationEventConverter()
 	ordEventDto := dtos.OrderEventDTO{
 		EventID: uuid.New(),
 		Order: dtos.OrderDTO{
