@@ -62,9 +62,9 @@ services:
       - kafka
     environment:
       KAFKA_BROKER: kafka:29092
-      DYNAMODB_AUDITING_TABLE_NAME: delivery-auditing
-      DYNAMODB_ORDER_TABLE_NAME: delivery-orders
-      DYNAMODB_PROCESSED_ORDER_TABLE_NAME: delivery-processing
+      DYNAMODB_AUDITING_TABLE_ARN: delivery-auditing
+      DYNAMODB_ORDER_TABLE_ARN: delivery-orders
+      DYNAMODB_PROCESSED_ORDER_TABLE_ARN: delivery-processing
       AWS_PROFILE: delivery-processor
     networks:
       - delivery-network
@@ -78,7 +78,7 @@ services:
       - kafka
     environment:
       KAFKA_BROKER: kafka:29092
-      DYNAMODB_NOTIFIED_MESSAGES_TABLE_NAME: delivery-notifications
+      DYNAMODB_NOTIFIED_MESSAGES_TABLE_ARN: delivery-notifications
       AWS_PROFILE: delivery-processor
     networks:
       - delivery-network

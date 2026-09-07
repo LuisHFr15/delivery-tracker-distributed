@@ -1,4 +1,4 @@
-.PHONY: build test vet fmt compose-up compose-down deploy
+.PHONY: build test vet fmt compose-up compose-down deploy deploy-ecr deploy-ecr-lambda
 
 # ---------------------------------------------------------------------------
 # Local development
@@ -31,8 +31,8 @@ deploy:
 	sam build && sam deploy --guided
 
 # SAM invokes one target per function (BuildMethod: makefile). Each compiles a
-# static linux/arm64 `bootstrap` binary into the artifacts directory SAM hands us.
-GO_LAMBDA_BUILD = GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -o $(ARTIFACTS_DIR)/bootstrap
+# static linux/amd64 `bootstrap` binary into the artifacts directory SAM hands us.
+GO_LAMBDA_BUILD = GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -o $(ARTIFACTS_DIR)/bootstrap
 
 build-IngesterFunction:
 	$(GO_LAMBDA_BUILD) ./cmd/ingester
@@ -42,3 +42,12 @@ build-ProcessorFunction:
 
 build-NotifierFunction:
 	$(GO_LAMBDA_BUILD) ./cmd/notifier
+
+# ---------------------------------------------------------------------------
+# ECR & Lambda Container Deployment
+# ---------------------------------------------------------------------------
+deploy-ecr:
+	./scripts/deploy-ecr.sh $(SERVICE) $(TAG)
+
+deploy-ecr-lambda:
+	./scripts/deploy-ecr.sh $(or $(SERVICE),all) $(TAG) -l

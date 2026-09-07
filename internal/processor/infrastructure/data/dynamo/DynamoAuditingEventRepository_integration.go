@@ -14,10 +14,10 @@ import (
 )
 
 type DynamoAuditingEventRepository struct {
-	tableName string
-	client    *dynamodb.Client
-	buffer    chan *data.DynamoEvent
-	done      chan struct{}
+	tableArn string
+	client   *dynamodb.Client
+	buffer   chan *data.DynamoEvent
+	done     chan struct{}
 }
 
 func NewDynamoAuditingEventRepository(ctx context.Context) *DynamoAuditingEventRepository {
@@ -25,11 +25,15 @@ func NewDynamoAuditingEventRepository(ctx context.Context) *DynamoAuditingEventR
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
+	tableArn := os.Getenv("DYNAMODB_AUDITING_TABLE_ARN")
+	if tableArn == "" {
+		tableArn = os.Getenv("DYNAMODB_AUDITING_TABLE_NAME")
+	}
 	return &DynamoAuditingEventRepository{
-		tableName: os.Getenv("DYNAMODB_AUDITING_TABLE_NAME"),
-		client:    dynamodb.NewFromConfig(cfg),
-		buffer:    make(chan *data.DynamoEvent),
-		done:      make(chan struct{}),
+		tableArn: tableArn,
+		client:   dynamodb.NewFromConfig(cfg),
+		buffer:   make(chan *data.DynamoEvent),
+		done:     make(chan struct{}),
 	}
 }
 
@@ -52,7 +56,7 @@ func (d *DynamoAuditingEventRepository) RunWorker() {
 
 		// if the parent app context is currently shutting down, the dynamodb will still conclude the operation since it has the graceful shutdown
 		_, err = d.client.PutItem(reqCtx, &dynamodb.PutItemInput{
-			TableName: aws.String(d.tableName),
+			TableName: aws.String(d.tableArn),
 			Item:      item,
 		})
 

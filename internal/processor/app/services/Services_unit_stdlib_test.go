@@ -7,6 +7,7 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
 	domainservices "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services/convertion"
 	"github.com/google/uuid"
 )
 
@@ -180,7 +181,7 @@ func TestOrderEventService_ConvertEvent_ValueCorrespondence(t *testing.T) {
 
 	// Type 2: the service must delegate to OrderEventConverter. Rebuild the
 	// event independently and compare everything except the wall-clock stamp.
-	want := domainservices.NewOrderEventConverter().Convert(dto)
+	want := convertion.NewOrderEventConverter().Convert(dto)
 	got := audit.added[0]
 	got.Timestamp = want.Timestamp // Convert uses time.Now(); ignore it.
 	if got != want {
@@ -284,10 +285,10 @@ func TestLocationEventService_ProcessEvent_SideEffectGuards(t *testing.T) {
 	repoErr := errors.New("boom")
 
 	tests := []struct {
-		name       string
-		orders     *fakeOrderRepo
-		wantErr    bool
-		wantErrIs  error
+		name      string
+		orders    *fakeOrderRepo
+		wantErr   bool
+		wantErrIs error
 	}{
 		{
 			name:    "order_not_found",

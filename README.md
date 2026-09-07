@@ -65,7 +65,7 @@ adapters bound in `main.go` do. This is the payoff of the ports & adapters desig
 | Language | Go 1.26 |
 | Messaging (local) | Apache Kafka (`segmentio/kafka-go`) |
 | Messaging (AWS) | Amazon SNS (`aws-sdk-go-v2`) |
-| Compute (AWS) | AWS Lambda (`aws-lambda-go`, `provided.al2023`, arm64) |
+| Compute (AWS) | AWS Lambda (`aws-lambda-go`, `provided.al2023`, x86_64) |
 | HTTP (local) | Gin |
 | HTTP (AWS) | API Gateway (HTTP API) |
 | Persistence | Amazon DynamoDB |

@@ -7,6 +7,7 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/data"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/models/order"
 	domainservices "github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services"
+	"github.com/LuisHFr15/delivery-tracker-distributed/internal/processor/domain/services/convertion"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,7 +115,7 @@ func TestOrderEventService_ConvertEvent_ValueCorrespondence_Testify(t *testing.T
 	assert.Equal(t, dto.EventID, orders.added[0].EventId)
 
 	// Type 2: delegates to OrderEventConverter (ignore the time.Now() stamp).
-	want := domainservices.NewOrderEventConverter().Convert(dto)
+	want := convertion.NewOrderEventConverter().Convert(dto)
 	got := audit.added[0]
 	got.Timestamp = want.Timestamp
 	assert.Equal(t, want, got)

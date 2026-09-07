@@ -42,9 +42,9 @@ services and flushes the buffered writers via `StopWorker` before returning.
 | Variable | Mode | Purpose |
 |---|---|---|
 | `KAFKA_BROKER` | local | Kafka bootstrap address |
-| `DYNAMODB_AUDITING_TABLE_NAME` | both | auditing table |
-| `DYNAMODB_ORDER_TABLE_NAME` | both | orders table |
-| `DYNAMODB_PROCESSED_ORDER_TABLE_NAME` | both | processed-orders table |
+| `DYNAMODB_AUDITING_TABLE_ARN` | both | auditing table ARN (or name) |
+| `DYNAMODB_ORDER_TABLE_ARN` | both | orders table ARN (or name) |
+| `DYNAMODB_PROCESSED_ORDER_TABLE_ARN` | both | processed-orders table ARN (or name) |
 | `SNS_ORDER_TOPIC_ARN` / `SNS_LOCATION_TOPIC_ARN` | lambda | topic routing |
 | `SNS_PROCESSED_ORDERS_TOPIC_ARN` | lambda | processed-orders topic |
 | `APP_RUNTIME` | both | `local` (default) or `lambda` |

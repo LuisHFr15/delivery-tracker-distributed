@@ -15,10 +15,10 @@ import (
 )
 
 type DynamoProcessedOrderRepository struct {
-	tableName string
-	client    *dynamodb.Client
-	buffer    chan *data.ProcessedOrder
-	done      chan struct{}
+	tableArn string
+	client   *dynamodb.Client
+	buffer   chan *data.ProcessedOrder
+	done     chan struct{}
 }
 
 func NewDynamoProcessedOrderRepository(ctx context.Context) *DynamoProcessedOrderRepository {
@@ -27,11 +27,15 @@ func NewDynamoProcessedOrderRepository(ctx context.Context) *DynamoProcessedOrde
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
 	}
+	tableArn := os.Getenv("DYNAMODB_PROCESSED_ORDER_TABLE_ARN")
+	if tableArn == "" {
+		tableArn = os.Getenv("DYNAMODB_PROCESSED_ORDER_TABLE_NAME")
+	}
 	return &DynamoProcessedOrderRepository{
-		tableName: os.Getenv("DYNAMODB_PROCESSED_ORDER_TABLE_NAME"),
-		client:    dynamodb.NewFromConfig(cfg),
-		buffer:    make(chan *data.ProcessedOrder),
-		done:      make(chan struct{}),
+		tableArn: tableArn,
+		client:   dynamodb.NewFromConfig(cfg),
+		buffer:   make(chan *data.ProcessedOrder),
+		done:     make(chan struct{}),
 	}
 }
 
@@ -53,7 +57,7 @@ func (d *DynamoProcessedOrderRepository) RunWorker() {
 		reqCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
 		_, err = d.client.PutItem(reqCtx, &dynamodb.PutItemInput{
-			TableName: aws.String(d.tableName),
+			TableName: aws.String(d.tableArn),
 			Item:      item,
 		})
 
@@ -72,7 +76,7 @@ func (d *DynamoProcessedOrderRepository) StopWorker() error {
 
 func (d *DynamoProcessedOrderRepository) GetLatestByOrderId(ctx context.Context, orderId string) (*data.ProcessedOrder, error) {
 	paginator := dynamodb.NewQueryPaginator(d.client, &dynamodb.QueryInput{
-		TableName:              aws.String(d.tableName),
+		TableName:              aws.String(d.tableArn),
 		KeyConditionExpression: aws.String("OrderId = :oid"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":oid": &types.AttributeValueMemberS{Value: orderId},
