@@ -10,6 +10,7 @@ import (
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/dtos"
 	"github.com/LuisHFr15/delivery-tracker-distributed/internal/ingester/app/services"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/google/uuid"
 )
 
 func respond(status int, body string) events.APIGatewayV2HTTPResponse {
@@ -43,6 +44,9 @@ func NewAPIGatewayHandler(service *services.IngesterService) func(context.Contex
 			if err := json.Unmarshal([]byte(req.Body), &dto); err != nil {
 				return respond(http.StatusBadRequest, errorBody(err)), nil
 			}
+			if dto.EventID == uuid.Nil {
+				dto.EventID = uuid.New()
+			}
 			if err := service.IngestOrder(ctx, dto); err != nil {
 				return respond(http.StatusInternalServerError, errorBody(err)), nil
 			}
@@ -51,7 +55,10 @@ func NewAPIGatewayHandler(service *services.IngesterService) func(context.Contex
 		case method == http.MethodPost && strings.HasPrefix(path, "/order/") && strings.HasSuffix(path, "/location"):
 			var dto dtos.LocationEventDTO
 			if err := json.Unmarshal([]byte(req.Body), &dto); err != nil {
-				return respond(http.StatusBadRequest, `{"error":"invalid request format"}`), nil
+				return respond(http.StatusBadRequest, errorBody(err)), nil
+			}
+			if dto.EventID == uuid.Nil {
+				dto.EventID = uuid.New()
 			}
 			if err := service.IngestLocation(ctx, dto); err != nil {
 				return respond(http.StatusInternalServerError, errorBody(err)), nil
