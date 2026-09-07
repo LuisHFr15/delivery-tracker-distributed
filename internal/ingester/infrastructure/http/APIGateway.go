@@ -53,12 +53,23 @@ func NewAPIGatewayHandler(service *services.IngesterService) func(context.Contex
 			return respond(http.StatusAccepted, `{"message": "order being processed"}`), nil
 
 		case method == http.MethodPost && strings.HasPrefix(path, "/order/") && strings.HasSuffix(path, "/location"):
+			rawID := strings.TrimPrefix(path, "/order/")
+			rawID = strings.TrimSuffix(rawID, "/location")
+			pathOrderID, err := uuid.Parse(rawID)
+
+			if err != nil {
+				return respond(http.StatusBadRequest, `{"error":"invalid order_id in path"}`), nil
+			}
+
 			var dto dtos.LocationEventDTO
 			if err := json.Unmarshal([]byte(req.Body), &dto); err != nil {
 				return respond(http.StatusBadRequest, errorBody(err)), nil
 			}
 			if dto.EventID == uuid.Nil {
 				dto.EventID = uuid.New()
+			}
+			if dto.OrderID != pathOrderID {
+				return respond(http.StatusBadRequest, `{"error":"invalid order_id in path"}`), nil
 			}
 			if err := service.IngestLocation(ctx, dto); err != nil {
 				return respond(http.StatusInternalServerError, errorBody(err)), nil
